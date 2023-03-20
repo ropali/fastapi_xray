@@ -35,8 +35,9 @@ def start_server():
                         # Process the data received from the client
                         print(
                             f"-------------------------Received[{datetime.datetime.now()}]---------------------------------")
-                        # print(json.loads(data.decode('utf-8')))
+                        print(json.loads(data.decode('utf-8')))
                         request_data.append(json.loads(data.decode('utf-8')))
+                        print(f"-------------------------Received[{datetime.datetime.now()}]---------------------------------")
             except Exception as e:
                 print("An error occurred:", e)
                 # Restart the program if it crashes
@@ -44,5 +45,6 @@ def start_server():
 
 
 if __name__ == '__main__':
-    render_ui()
+    render_ui(request_data)
     # start_server()
+
