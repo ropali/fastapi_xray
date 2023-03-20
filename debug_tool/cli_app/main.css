@@ -1,8 +1,13 @@
+Grid {
+    grid-size: 1 2;
+    grid-columns: 100%;
+}
+
 #left_panel {
     dock: left;
     width: 25%;
     height: 100%;
-    background: #0D47A1;
+    background: #555358;
     color: #FFFFFF;
 }
 
@@ -10,9 +15,10 @@
 #right_panel {
     dock: right;
     width: 75%;
-    height: 100%;
-    background: #FFFFFF;
+    height: 100vh;
+    background: #555358;
     color: #212121;
+    margin: 0 1
 }
 
 
@@ -22,8 +28,32 @@
     text-align: center;
 }
 
+Footer {
+   background: #5f6062;
+    color: $text;
+    dock: bottom;
+    height: 1;
+}
+
+Footer > .footer--highlight {
+   background: #7b7263;
+}
+
+Footer > .footer--highlight-key {
+    background: #7b7263;
+    text-style: bold;
+}
+
+Footer > .footer--key {
+    text-style: bold;
+    background: #7b7263;
+}
 Label {
     padding: 1 1;
+}
+
+text-box {
+    height: 10
 }
 
 
