@@ -1,5 +1,6 @@
 import uuid
 from time import monotonic
+from typing import Dict, List
 
 from textual.app import App, ComposeResult
 from textual.containers import Container
@@ -9,16 +10,13 @@ from textual.widgets import Button, Header, Footer, Static, ListView, ListItem, 
 
 
 class LeftPanel(Widget):
-    """A widget to display elapsed time."""
-
     items = reactive([])
 
-    def generate_items(self):
-        for i in range(10):
-            self.items.append(ListItem(Label(str(uuid.uuid4()), classes="request_item")))
+    def __init__(self, items: List[Dict], **kwargs):
+        super().__init__(**kwargs)
+        self.items = [ListItem(Label(item.get("title"), classes="request_item")) for item in items]
 
     def compose(self) -> ComposeResult:
-        self.generate_items()
 
         yield Static(
             "All Request",
@@ -29,6 +27,7 @@ class LeftPanel(Widget):
         yield ListView(
             *self.items,
             initial_index=None,
+            id="left_panel_list_view"
         )
 
 
@@ -45,24 +44,33 @@ class RightPanel(Widget):
 
 
 class DebugApp(App):
-    """A Textual app to manage stopwatches."""
+    """FastAPI debug app."""
+
+    def __init__(self, data: List[Dict], **kwargs):
+        super().__init__(**kwargs)
+
+        self.data = data
 
     CSS_PATH = "main.css"
     BINDINGS = [
         ("d", "toggle_dark", "Toggle dark mode"),
+        ("a", "add_item", "Add new item"),
     ]
 
     def compose(self) -> ComposeResult:
         """Called to add widgets to the app."""
-        yield Container(LeftPanel(), id="left_panel")
+        yield Container(LeftPanel(items=self.data, id="my_list"), id="left_panel")
         yield Container(RightPanel(), id="right_panel")
+        yield Footer()
+
+    def action_add_item(self):
+        self.query_one("#left_panel_list_view").append(ListItem(Label(str(uuid.uuid4()), classes="request_item")))
+
+    def action_toggle_dark(self) -> None:
+        """An action to toggle dark mode."""
+        self.dark = not self.dark
 
 
-def action_toggle_dark(self) -> None:
-    """An action to toggle dark mode."""
-    self.dark = not self.dark
-
-
-def render_ui():
-    app = DebugApp(watch_css=True)
+def render_ui(data):
+    app = DebugApp(watch_css=True, data=data)
     app.run()
