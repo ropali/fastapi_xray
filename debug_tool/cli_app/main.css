@@ -1,24 +1,47 @@
-Grid {
-    grid-size: 1 2;
-    grid-columns: 100%;
+Screen {
+    layout: vertical;
+}
+
+Screen {
+    layout: grid;
+    grid-size: 2 1;
+    grid-columns: 1fr 3fr;
+    width: 100%
+}
+
+#app_title {
+    dock: top;
+    width: 100%;
+    height: 3;
+    background: #555358;
+    color: #FFFFFF;
+    margin: 1 1 1 0;
 }
 
 #left_panel {
     dock: left;
-    width: 25%;
+    width: 100%;
     height: 100%;
     background: #555358;
     color: #FFFFFF;
+    margin: 0 0 1 0;
+    border: solid #d08770;
 }
 
 
 #right_panel {
     dock: right;
-    width: 75%;
-    height: 100vh;
+    width: 100%;
+    height: 100%;
     background: #555358;
-    color: #212121;
-    margin: 0 1
+    color: #FFFFFF;
+    margin: 0 0 1 1;
+    border: solid #d08770;
+}
+
+#left_panel_list_view{
+    background: #555358;
+    color: #5f6062
 }
 
 
@@ -26,6 +49,11 @@ Grid {
     margin: 1 1;
     width: auto;
     text-align: center;
+}
+
+.info-box {
+
+    height: auto;
 }
 
 Footer {
