@@ -1,8 +1,12 @@
 import datetime
 import json
+import multiprocessing
 import socket
 import os
+import sqlite3
 import uuid
+from multiprocessing import Process
+from typing import Dict
 
 from cli_app.ui import render_ui
 
@@ -12,7 +16,7 @@ PORT = 8989  # The port used by the server
 request_data = []
 
 
-def start_server():
+def start_server(sharedQueue):
     # Create a socket object
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         print(f"Started debug server on {HOST}:{PORT}")
@@ -27,20 +31,15 @@ def start_server():
                 # Wait for a client to connect
                 conn, addr = s.accept()
                 with conn:
-                    print('Connected by', addr)
-
                     # Receive data from the client
                     while True:
                         data = conn.recv(1024)
                         if not data:
                             break
                         # Process the data received from the client
-                        print(
-                            f"-------------------------Received[{datetime.datetime.now()}]---------------------------------")
-                        print(json.loads(data.decode('utf-8')))
-                        request_data.append(json.loads(data.decode('utf-8')))
-                        print(
-                            f"-------------------------Received[{datetime.datetime.now()}]---------------------------------")
+
+                        sharedQueue.put(data.decode('utf-8'))
+
             except Exception as e:
                 print("An error occurred:", e)
                 # Restart the program if it crashes
@@ -112,5 +111,18 @@ if __name__ == '__main__':
 
         }
     ]
-    render_ui(data)
-    # start_server()
+
+    sharedQueue = multiprocessing.Queue()
+
+    p1 = Process(target=start_server, args=(sharedQueue,))  # process p1
+    p1.daemon = True
+    p1.start()
+
+    p2 = Process(target=render_ui, args=(sharedQueue,))  # process p2
+    p2.start()
+
+    p1.join()
+    p2.join()
+
+    start_server(sharedQueue)
+    render_ui(sharedQueue)

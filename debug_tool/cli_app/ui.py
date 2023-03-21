@@ -1,15 +1,16 @@
+import json
 import uuid
-from time import monotonic
 from typing import Dict, List
 
 from rich import box
 from rich.align import Align
 from rich.panel import Panel
 from textual.app import App, ComposeResult
-from textual.containers import Container, Grid
+from textual.containers import Container
 from textual.reactive import reactive
 from textual.widget import Widget
-from textual.widgets import Button, Header, Footer, Static, ListView, ListItem, Label
+from textual.widgets import Footer, ListView, ListItem, Label
+
 from cli_app.logger import get_logger
 
 logger = get_logger(__name__)
@@ -93,7 +94,6 @@ class LeftPanel(Widget):
         self.items = items
 
     def compose(self) -> ComposeResult:
-        logger.info(str(self.items))
         self.items = [ListItem(Label(f"[{item.get('method')}] {item.get('path')}", classes="request_item")) for item in
                       self.items]
 
@@ -113,29 +113,52 @@ class RightPanel(Widget):
         self.data = data
         super().__init__(**kwargs)
 
-    def construct_text(self) -> str:
-        return f"HTTP Method: {self.data.get('method')} \n" \
-               f"Path: {self.data.get('path')}\n" \
-               f"Execution Time: {self.data.get('time')} ms\n" \
-               f"URL: {self.data.get('url')}\n" \
-            f"Response Code: {self.data.get('status_code')}\n"
+    def get_basic_details(self) -> str:
+        return f"\nHTTP Method: {self.data.get('method')} \n\n" \
+               f"Path: {self.data.get('path')}\n\n" \
+               f"Execution Time: {self.data.get('time')} ms\n\n" \
+               f"URL: {self.data.get('url')}\n\n" \
+               f"Response Code: {self.data.get('status_code')}"
+
+    def get_headers(self) -> str:
+        headers = self.data.get("headers")
+        text = "\n"
+
+        # last_key = list(headers.keys())[-1]
+        #
+        # for k, v in headers.items():
+        #     text += f"{k.capitalize()}: {v}"
+        #
+        #     if last_key == k:
+        #         text += "\n"
+        #     else:
+        #         text += "\n\n"
+
+        return text
 
     def compose(self) -> ComposeResult:
         yield Container(
-            InfoBox("Basics", self.construct_text(), align="left"),
-            InfoBox("Query Parameters", self.construct_text(), align="left"),
-            InfoBox("Headers", self.construct_text(), align="left"),
+            InfoBox("Basics", self.get_basic_details(), align="left"),
+            InfoBox("Headers", self.get_headers(), align="left"),
             id="right_panel"
         )
 
 
 class DebugApp(App):
     """FastAPI debug app."""
+    data = reactive([])
 
-    def __init__(self, data: List[Dict], **kwargs):
+    def __init__(self, queue, **kwargs):
         super().__init__(**kwargs)
+        self.queue = queue
 
-        self.data = data
+    def poll(self):
+        try:
+            result = self.queue.get(True, 1)
+            if result:
+                self.data.append(json.loads(result))
+        except Exception:
+            pass
 
     CSS_PATH = "main.css"
     BINDINGS = [
@@ -144,10 +167,11 @@ class DebugApp(App):
     ]
 
     def compose(self) -> ComposeResult:
+        self.poll()
         """Called to add widgets to the app."""
         yield Container(TextBox("FastAPI Debug", "FastAPI Inspector", False, "center"), id="app_title")
         yield LeftPanel(items=self.data)
-        yield RightPanel(self.data[0])
+        yield RightPanel(self.data[0] if len(self.data) > 0 else {})
 
         yield Footer()
 
@@ -159,6 +183,6 @@ class DebugApp(App):
         self.dark = not self.dark
 
 
-def render_ui(data):
-    app = DebugApp(watch_css=True, data=data)
+def render_ui(sharedQueue):
+    app = DebugApp(watch_css=True, queue=sharedQueue)
     app.run()
