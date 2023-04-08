@@ -1,2 +1,2 @@
 setuptools~=66.1.1
-textual~=0.13.0
+textual~=0.19.0

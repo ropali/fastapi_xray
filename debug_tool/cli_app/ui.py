@@ -1,17 +1,17 @@
 import json
-import uuid
 from typing import Dict, List
 
 from rich import box
 from rich.align import Align
 from rich.panel import Panel
+from textual import work
 from textual.app import App, ComposeResult
 from textual.containers import Container
 from textual.reactive import reactive
 from textual.widget import Widget
 from textual.widgets import Footer, ListView, ListItem, Label
 
-from cli_app.logger import get_logger
+from commons.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -152,22 +152,13 @@ class DebugApp(App):
         super().__init__(**kwargs)
         self.queue = queue
 
-    def poll(self):
-        try:
-            result = self.queue.get(True, 1)
-            if result:
-                self.data.append(json.loads(result))
-        except Exception:
-            pass
-
     CSS_PATH = "main.css"
     BINDINGS = [
         ("d", "toggle_dark", "Toggle dark mode"),
-        ("a", "add_item", "Add new item"),
+        ("r", "refresh", "Refresh"),
     ]
 
     def compose(self) -> ComposeResult:
-        self.poll()
         """Called to add widgets to the app."""
         yield Container(TextBox("FastAPI Debug", "FastAPI Inspector", False, "center"), id="app_title")
         yield LeftPanel(items=self.data)
@@ -175,14 +166,38 @@ class DebugApp(App):
 
         yield Footer()
 
-    def action_add_item(self):
-        self.query_one("#left_panel_list_view").append(ListItem(Label(str(uuid.uuid4()), classes="request_item")))
+    def action_refresh(self):
+        self.poll()
 
     def action_toggle_dark(self) -> None:
         """An action to toggle dark mode."""
         self.dark = not self.dark
 
+    @work(exclusive=True)
+    async def poll(self):
+        # TODO: continuously poll for data
+        import queue
+        logger.info("Started polling queue")
+        widget = self.query_one("#left_panel_list_view")
+        try:
 
-def render_ui(sharedQueue):
-    app = DebugApp(watch_css=True, queue=sharedQueue)
+            result = self.queue.get()
+            logger.info(f"Received data from queue: {result}")
+            if result:
+                result = json.loads(result)
+                await widget.append(ListItem(Label(str(result.get('request_id', "A")), classes="request_item")))
+
+        except queue.Empty:
+            # handle case where the queue is empty
+            logger.warning("Queue is empty")
+        except json.JSONDecodeError:
+            # handle case where the received data is not valid JSON
+            logger.error("Received data is not valid JSON")
+        except Exception as e:
+            # handle any other exceptions
+            logger.error(f"Error while polling queue: {e}")
+
+
+def render_ui(shared_queue):
+    app = DebugApp(watch_css=True, queue=shared_queue)
     app.run()
