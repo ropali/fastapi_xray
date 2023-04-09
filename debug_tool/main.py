@@ -2,9 +2,9 @@ import multiprocessing
 import os
 from multiprocessing import Process, Queue
 
-from cli_app.ui import render_ui
 from commons.logger import get_logger
 from server.receiver import Receiver
+from ui.app import render_ui
 
 logger = get_logger(__name__)
 
