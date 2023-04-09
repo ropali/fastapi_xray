@@ -34,11 +34,13 @@ class Receiver:
                             break
                         # Process the data received from the client
                         logger.info(f"Received data: {data.decode('utf-8')}")
-                        self.shared_queue.put(data.decode('utf-8'))
+                        self.shared_queue.put(data.decode("utf-8"))
 
             except Exception as e:
                 self.stop()
-                logger.error("An error occurred while handling the connection", )
+                logger.error(
+                    "An error occurred while handling the connection",
+                )
                 logger.exception(e)
 
     def stop(self):

@@ -3,6 +3,7 @@ import os
 from multiprocessing import Queue
 from typing import Dict, List
 
+from commons.logger import get_logger
 from rich import box
 from rich.align import Align
 from rich.panel import Panel
@@ -11,15 +12,15 @@ from textual.app import App, ComposeResult
 from textual.containers import Container
 from textual.reactive import reactive
 from textual.widget import Widget
-from textual.widgets import Footer, ListView, ListItem, Label
-
-from commons.logger import get_logger
+from textual.widgets import Footer, Label, ListItem, ListView
 
 logger = get_logger(__name__)
 
 
 class TextBox(Widget):
-    def __init__(self, name: str, text: str, is_titled: bool, align: str, height: int = None) -> None:
+    def __init__(
+        self, name: str, text: str, is_titled: bool, align: str, height: int = None
+    ) -> None:
         super().__init__(name=name)
         self.text = text
         self.is_titled = is_titled
@@ -38,7 +39,7 @@ class TextBox(Widget):
             title=self.name if self.is_titled else None,
             border_style="white",
             box=box.ROUNDED,
-            height=self.height
+            height=self.height,
         )
 
 
@@ -63,7 +64,7 @@ class InfoBox(Widget):
             border_style="white",
             box=box.ROUNDED,
             safe_box=True,
-            height=None
+            height=None,
         )
 
 
@@ -96,45 +97,48 @@ class LeftPanel(Widget):
         self.items = items
 
     def compose(self) -> ComposeResult:
-        self.items = [ListItem(Label(f"[{item.get('method')}] {item.get('path')}", classes="request_item")) for item in
-                      self.items]
+        self.items = [
+            ListItem(
+                Label(
+                    f"[{item.get('method')}] {item.get('path')}", classes="request_item"
+                )
+            )
+            for item in self.items
+        ]
 
         yield Container(
-            ListView(
-                *self.items,
-                initial_index=None,
-                id="left_panel_list_view"
-            ),
-            id="left_panel"
+            ListView(*self.items, initial_index=None, id="left_panel_list_view"),
+            id="left_panel",
         )
 
 
 class RightPanel(Widget):
-
     def __init__(self, data: Dict, **kwargs):
         self.data = data
         super().__init__(**kwargs)
 
     def get_basic_details(self) -> str:
-        return f"\nHTTP Method: {self.data.get('method')} \n\n" \
-               f"Path: {self.data.get('path')}\n\n" \
-               f"Execution Time: {self.data.get('time')} ms\n\n" \
-               f"URL: {self.data.get('url')}\n\n" \
-               f"Response Code: {self.data.get('status_code')}"
+        return (
+            f"\nHTTP Method: {self.data.get('method')} \n\n"
+            f"Path: {self.data.get('path')}\n\n"
+            f"Execution Time: {self.data.get('time')} ms\n\n"
+            f"URL: {self.data.get('url')}\n\n"
+            f"Response Code: {self.data.get('status_code')}"
+        )
 
     def get_headers(self) -> str:
         headers = self.data.get("headers")
         text = "\n"
 
-        # last_key = list(headers.keys())[-1]
-        #
-        # for k, v in headers.items():
-        #     text += f"{k.capitalize()}: {v}"
-        #
-        #     if last_key == k:
-        #         text += "\n"
-        #     else:
-        #         text += "\n\n"
+        last_key = list(headers.keys())[-1]
+
+        for k, v in headers.items():
+            text += f"{k.capitalize()}: {v}"
+
+            if last_key == k:
+                text += "\n"
+            else:
+                text += "\n\n"
 
         return text
 
@@ -142,12 +146,13 @@ class RightPanel(Widget):
         yield Container(
             InfoBox("Basics", self.get_basic_details(), align="left"),
             InfoBox("Headers", self.get_headers(), align="left"),
-            id="right_panel"
+            id="right_panel",
         )
 
 
 class DebugApp(App):
     """FastAPI debug app."""
+
     data = reactive([])
 
     def __init__(self, queue: Queue, **kwargs):
@@ -159,19 +164,23 @@ class DebugApp(App):
         ("d", "toggle_dark", "Toggle dark mode"),
         ("r", "refresh", "Refresh"),
         ("c", "clear_all", "Clear All"),
-
     ]
 
     def compose(self) -> ComposeResult:
         """Called to add widgets to the app."""
-        yield Container(TextBox("FastAPI Debug", "FastAPI Inspector", False, "center"), id="app_title")
+        yield Container(
+            TextBox("FastAPI Debug", "FastAPI Inspector", False, "center"),
+            id="app_title",
+        )
         yield LeftPanel(items=self.data)
         yield RightPanel(self.data[0] if len(self.data) > 0 else {})
 
         yield Footer()
 
     def on_mount(self) -> None:
-        self.set_interval(interval=os.environ.get("REFRESH_INTERVAL", 2), callback=self.action_refresh)
+        self.set_interval(
+            interval=os.environ.get("REFRESH_INTERVAL", 2), callback=self.action_refresh
+        )
 
     async def action_refresh(self):
         self.poll()
@@ -187,6 +196,7 @@ class DebugApp(App):
     @work(exclusive=True)
     async def poll(self):
         import queue
+
         logger.info("Started polling queue")
         widget = self.query_one("#left_panel_list_view")
         try:
@@ -197,8 +207,12 @@ class DebugApp(App):
                 return
 
             result = json.loads(result)
-            logger.info(f"Received data from queue for request ID: {result.get('request_id')}")
-            await widget.append(ListItem(Label(str(result.get('request_id')), classes="request_item")))
+            logger.info(
+                f"Received data from queue for request ID: {result.get('request_id')}"
+            )
+            await widget.append(
+                ListItem(Label(str(result.get("request_id")), classes="request_item"))
+            )
 
         except queue.Empty:
             # handle case where the queue is empty

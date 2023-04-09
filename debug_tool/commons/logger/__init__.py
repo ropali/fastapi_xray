@@ -4,9 +4,9 @@ import logging
 def get_logger(name):
     logger = logging.getLogger()
     logger.setLevel(logging.INFO)
-    formatter = logging.Formatter('%(asctime)s | %(levelname)s | %(message)s')
+    formatter = logging.Formatter("%(asctime)s | %(levelname)s | %(message)s")
 
-    file_handler = logging.FileHandler('logs.log')
+    file_handler = logging.FileHandler("logs.log")
     file_handler.setLevel(logging.DEBUG)
     file_handler.setFormatter(formatter)
 
