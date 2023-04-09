@@ -1,4 +1,6 @@
 import json
+import os
+from multiprocessing import Queue
 from typing import Dict, List
 
 from rich import box
@@ -148,7 +150,7 @@ class DebugApp(App):
     """FastAPI debug app."""
     data = reactive([])
 
-    def __init__(self, queue, **kwargs):
+    def __init__(self, queue: Queue, **kwargs):
         super().__init__(**kwargs)
         self.queue = queue
 
@@ -156,6 +158,8 @@ class DebugApp(App):
     BINDINGS = [
         ("d", "toggle_dark", "Toggle dark mode"),
         ("r", "refresh", "Refresh"),
+        ("c", "clear_all", "Clear All"),
+
     ]
 
     def compose(self) -> ComposeResult:
@@ -166,26 +170,35 @@ class DebugApp(App):
 
         yield Footer()
 
-    def action_refresh(self):
+    def on_mount(self) -> None:
+        self.set_interval(interval=os.environ.get("REFRESH_INTERVAL", 2), callback=self.action_refresh)
+
+    async def action_refresh(self):
         self.poll()
 
     def action_toggle_dark(self) -> None:
         """An action to toggle dark mode."""
         self.dark = not self.dark
 
+    async def action_clear_all(self):
+        """An action to clear all requests."""
+        await self.query_one("#left_panel_list_view").clear()
+
     @work(exclusive=True)
     async def poll(self):
-        # TODO: continuously poll for data
         import queue
         logger.info("Started polling queue")
         widget = self.query_one("#left_panel_list_view")
         try:
 
-            result = self.queue.get()
-            logger.info(f"Received data from queue: {result}")
-            if result:
-                result = json.loads(result)
-                await widget.append(ListItem(Label(str(result.get('request_id', "A")), classes="request_item")))
+            result = self.queue.get_nowait()
+
+            if not result:
+                return
+
+            result = json.loads(result)
+            logger.info(f"Received data from queue for request ID: {result.get('request_id')}")
+            await widget.append(ListItem(Label(str(result.get('request_id')), classes="request_item")))
 
         except queue.Empty:
             # handle case where the queue is empty

@@ -14,9 +14,7 @@ PORT = 8989  # The port used by the server
 
 
 def start_server(shared_queue: Queue):
-    # Create a socket object
     receiver = Receiver(HOST, PORT, shared_queue)
-
     try:
         logger.info(f"server started")
         receiver.start()
