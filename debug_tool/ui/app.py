@@ -7,9 +7,10 @@ from textual import work
 from textual.app import App, ComposeResult
 from textual.containers import Container
 from textual.reactive import reactive
-from textual.widgets import Footer, Label, ListItem
+from textual.widgets import Footer, ListView
 from ui.components.panels import LeftPanel, RightPanel
-from ui.components.widgets import TextBox
+from ui.components.widgets.list import LabelItem
+from ui.components.widgets.text import TextBox
 
 logger = get_logger(__name__)
 
@@ -17,11 +18,12 @@ logger = get_logger(__name__)
 class DebugApp(App):
     """FastAPI debug app."""
 
-    selected_request = reactive({})
+    selected_request = reactive(None)
 
     def __init__(self, queue: Queue, **kwargs):
         super().__init__(**kwargs)
         self.queue = queue
+        self.requests = {}
 
     CSS_PATH = "main.css"
     BINDINGS = [
@@ -36,8 +38,8 @@ class DebugApp(App):
             TextBox("FastAPI Debug", "FastAPI Inspector", False, "center"),
             id="app_title",
         )
-        yield LeftPanel(items=[])
-        yield RightPanel(self.selected_request)
+        yield LeftPanel()
+        yield RightPanel(id="right_panel1")
 
         yield Footer()
 
@@ -57,11 +59,15 @@ class DebugApp(App):
         """An action to clear all requests."""
         await self.query_one("#left_panel_list_view").clear()
 
+    def on_list_view_selected(self, event: ListView.Selected):
+        logger.info(f"Clicked on item {self.requests.get(event.item.label)}")
+        # FIXME: Not refreshing UI
+        self.query_one("#right_panel1").data = self.requests.get(event.item.label)
+
     @work(exclusive=True)
     async def poll(self):
         import queue
 
-        logger.info("Started polling queue")
         widget = self.query_one("#left_panel_list_view")
         try:
 
@@ -74,8 +80,10 @@ class DebugApp(App):
             logger.info(
                 f"Received data from queue for request ID: {result.get('request_id')}"
             )
+            self.requests[result.get("request_id")] = result
+
             await widget.append(
-                ListItem(Label(str(result.get("request_id")), classes="request_item"))
+                LabelItem(str(result.get("request_id")), classes="request_item")
             )
 
         except queue.Empty:
