@@ -1,16 +1,17 @@
-from typing import Dict, List
+from typing import Dict
 
+from commons.logger import get_logger
 from textual.app import ComposeResult
 from textual.containers import Container
 from textual.reactive import reactive
 from textual.widget import Widget
-from textual.widgets import Label, ListItem, ListView
-from ui.components.widgets import InfoBox
+from ui.components.widgets.list import ListItems
+from ui.components.widgets.text import InfoBox
+
+logger = get_logger(__name__)
 
 
 class LeftPanel(Widget):
-    items = reactive([])
-
     DEFAULT_CSS = """
         ListItem {
             color: $text;
@@ -32,32 +33,26 @@ class LeftPanel(Widget):
         }
         """
 
-    def __init__(self, items: List[Dict], **kwargs):
+    def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.items = items
 
     def compose(self) -> ComposeResult:
-        self.items = [
-            ListItem(
-                Label(
-                    f"[{item.get('method')}] {item.get('path')}", classes="request_item"
-                )
-            )
-            for item in self.items
-        ]
-
-        yield Container(
-            ListView(*self.items, initial_index=None, id="left_panel_list_view"),
-            id="left_panel",
-        )
+        with Container(id="left_panel"):
+            yield ListItems()
 
 
 class RightPanel(Widget):
-    def __init__(self, data: Dict, **kwargs):
-        self.data = data
+    data = reactive(None)
+
+    def __init__(self, data: Dict = None, **kwargs):
         super().__init__(**kwargs)
+        self.data = data
 
     def get_basic_details(self) -> str:
+
+        if not self.data:
+            return "Nothing to display."
+
         return (
             f"\nHTTP Method: {self.data.get('method')} \n\n"
             f"Path: {self.data.get('path')}\n\n"
@@ -67,6 +62,9 @@ class RightPanel(Widget):
         )
 
     def get_headers(self) -> str:
+        if not self.data:
+            return "Nothing to display."
+
         headers = self.data.get("headers")
 
         if not headers:
@@ -87,6 +85,7 @@ class RightPanel(Widget):
         return text
 
     def compose(self) -> ComposeResult:
+        logger.info(f"Data: {self.data}")
         yield Container(
             InfoBox("Basics", self.get_basic_details(), align="left"),
             InfoBox("Headers", self.get_headers(), align="left"),
