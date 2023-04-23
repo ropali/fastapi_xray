@@ -39,7 +39,7 @@ class DebugApp(App):
             id="app_title",
         )
         yield LeftPanel()
-        yield RightPanel(id="right_panel1")
+        yield RightPanel()
 
         yield Footer()
 
@@ -58,11 +58,12 @@ class DebugApp(App):
     async def action_clear_all(self):
         """An action to clear all requests."""
         await self.query_one("#left_panel_list_view").clear()
+        self.query_one(RightPanel).selected_request = None
 
     def on_list_view_selected(self, event: ListView.Selected):
-        logger.info(f"Clicked on item {self.requests.get(event.item.label)}")
-        # FIXME: Not refreshing UI
-        self.query_one("#right_panel1").data = self.requests.get(event.item.label)
+        self.query_one(RightPanel).selected_request = self.requests.get(
+            event.item.label
+        )
 
     @work(exclusive=True)
     async def poll(self):

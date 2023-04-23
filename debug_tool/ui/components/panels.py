@@ -1,9 +1,10 @@
 from typing import Dict
 
 from commons.logger import get_logger
+from rich.console import RenderableType
 from textual.app import ComposeResult
 from textual.containers import Container
-from textual.reactive import reactive
+from textual.reactive import Reactive
 from textual.widget import Widget
 from ui.components.widgets.list import ListItems
 from ui.components.widgets.text import InfoBox
@@ -42,30 +43,28 @@ class LeftPanel(Widget):
 
 
 class RightPanel(Widget):
-    data = reactive(None)
+    selected_request: Reactive[RenderableType] = Reactive({})
 
-    def __init__(self, data: Dict = None, **kwargs):
+    def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.data = data
 
     def get_basic_details(self) -> str:
-
-        if not self.data:
+        if not self.selected_request:
             return "Nothing to display."
 
         return (
-            f"\nHTTP Method: {self.data.get('method')} \n\n"
-            f"Path: {self.data.get('path')}\n\n"
-            f"Execution Time: {self.data.get('time')} ms\n\n"
-            f"URL: {self.data.get('url')}\n\n"
-            f"Response Code: {self.data.get('status_code')}"
+            f"\nHTTP Method: {self.selected_request.get('method')} \n\n"
+            f"Path: {self.selected_request.get('path')}\n\n"
+            f"Execution Time: {self.selected_request.get('time')} ms\n\n"
+            f"URL: {self.selected_request.get('url')}\n\n"
+            f"Response Code: {self.selected_request.get('status_code')}"
         )
 
     def get_headers(self) -> str:
-        if not self.data:
+        if not self.selected_request:
             return "Nothing to display."
 
-        headers = self.data.get("headers")
+        headers = self.selected_request.get("headers")
 
         if not headers:
             return ""
@@ -85,9 +84,13 @@ class RightPanel(Widget):
         return text
 
     def compose(self) -> ComposeResult:
-        logger.info(f"Data: {self.data}")
         yield Container(
-            InfoBox("Basics", self.get_basic_details(), align="left"),
-            InfoBox("Headers", self.get_headers(), align="left"),
+            InfoBox("BASICS", self.get_basic_details(), id="basics_infobox"),
+            InfoBox("HEADERS", self.get_headers(), id="headers_infobox"),
             id="right_panel",
         )
+
+    def watch_selected_request(self, selected_request: Dict) -> None:
+        # https://github.com/Textualize/textual/discussions/1683
+        self.query_one("#basics_infobox").update(self.get_basic_details())
+        self.query_one("#headers_infobox").update(self.get_headers())
