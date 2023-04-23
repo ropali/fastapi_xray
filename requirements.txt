@@ -2,3 +2,4 @@ setuptools~=66.1.1
 textual~=0.19.0
 rich~=12.6.0
 typer~=0.7.0
+fastapi~=0.95.1
