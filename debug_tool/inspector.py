@@ -4,8 +4,9 @@ import time
 import uuid
 from typing import Callable
 
-from commons.logger import get_logger
 from fastapi import Request, Response
+
+from debug_tool.commons.logger import get_logger
 
 logger = get_logger(__name__)
 

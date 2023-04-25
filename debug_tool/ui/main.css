@@ -75,8 +75,9 @@ Footer > .footer--key {
     text-style: bold;
     background: #7b7263;
 }
-Label {
+.left_panel_label {
     padding: 1 1;
+    width: 100%
 }
 
 text-box {

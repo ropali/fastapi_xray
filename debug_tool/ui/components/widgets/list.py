@@ -7,12 +7,34 @@ logger = get_logger(__name__)
 
 
 class LabelItem(ListItem):
-    def __init__(self, label: str, **kwargs) -> None:
+    DEFAULT_CSS = """
+        ListItem {
+            color: $text;
+            height: auto;
+            background: #68625d;
+            overflow: hidden hidden;
+        }
+        ListItem > Widget :hover {
+            background: $boost;
+        }
+        ListView > ListItem.--highlight {
+            background: #7b7263 50%;
+        }
+        ListView:focus > ListItem.--highlight {
+            background: #5f6062;
+        }
+        ListItem > Widget {
+            height: auto;
+        }
+        """
+
+    def __init__(self, label: str, value: str, **kwargs) -> None:
         super().__init__(**kwargs)
         self.label = label
+        self.value = value
 
     def compose(self) -> ComposeResult:
-        yield Label(self.label)
+        yield Label(self.label, classes="left_panel_label")
 
 
 class ListItems(ListView):

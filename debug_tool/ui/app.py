@@ -1,6 +1,7 @@
 import json
 import os
 from multiprocessing import Queue
+from typing import Dict
 
 from commons.logger import get_logger
 from textual import work
@@ -59,21 +60,31 @@ class DebugApp(App):
         """An action to clear all requests."""
         await self.query_one("#left_panel_list_view").clear()
         self.query_one(RightPanel).selected_request = None
+        self.requests = {}
 
     def on_list_view_selected(self, event: ListView.Selected):
         self.query_one(RightPanel).selected_request = self.requests.get(
-            event.item.label
+            event.item.value
         )
+
+    async def add_new_request(self, new_request: Dict):
+        widget = self.query_one("#left_panel_list_view")
+        widget.append(
+            LabelItem(
+                label=f"{len(self.requests) + 1}. [b][{new_request.get('method')}][/] {new_request.get('path')}",
+                value=str(new_request.get("request_id")),
+                classes="request_item",
+            )
+        )
+
+        self.requests[new_request.get("request_id")] = new_request
 
     @work(exclusive=True)
     async def poll(self):
         import queue
 
-        widget = self.query_one("#left_panel_list_view")
         try:
-
             result = self.queue.get_nowait()
-
             if not result:
                 return
 
@@ -81,11 +92,7 @@ class DebugApp(App):
             logger.info(
                 f"Received data from queue for request ID: {result.get('request_id')}"
             )
-            self.requests[result.get("request_id")] = result
-
-            await widget.append(
-                LabelItem(str(result.get("request_id")), classes="request_item")
-            )
+            await self.add_new_request(result)
 
         except queue.Empty:
             # handle case where the queue is empty
