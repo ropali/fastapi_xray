@@ -56,6 +56,7 @@ class RightPanel(Widget):
             f"\nHTTP Method: {self.selected_request.get('method')} \n\n"
             f"Path: {self.selected_request.get('path')}\n\n"
             f"Path Params: {self.selected_request.get('path_params')}\n\n"
+            f"Query Params: {self.selected_request.get('query_params')}\n\n"
             f"Execution Time: {self.selected_request.get('time')} ms\n\n"
             f"Base URL: {self.selected_request.get('base_url')}\n\n"
             f"Response Code: {self.selected_request.get('status_code')}"

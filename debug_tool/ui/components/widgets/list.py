@@ -1,6 +1,6 @@
 from commons.logger import get_logger
 from textual.app import ComposeResult
-from textual.reactive import reactive
+from textual.widget import AwaitMount
 from textual.widgets import Label, ListItem, ListView
 
 logger = get_logger(__name__)
@@ -38,7 +38,19 @@ class LabelItem(ListItem):
 
 
 class ListItems(ListView):
-    items = reactive([])
-
     def __init__(self, **kwargs):
         super().__init__(id="left_panel_list_view", **kwargs)
+
+    def prepend(self, item: ListItem) -> AwaitMount:
+        """Prepend a new ListItem to the start of the ListView.
+
+        Args:
+            item: The ListItem to prepend.
+
+        Returns:
+            An awaitable that yields control to the event loop
+                until the DOM has been updated with the new child item.
+        """
+        await_mount = self.mount(item, before=0)
+        # self.index = 0
+        return await_mount

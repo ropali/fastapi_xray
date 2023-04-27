@@ -46,7 +46,7 @@ class DebugApp(App):
 
     def on_mount(self) -> None:
         self.set_interval(
-            interval=os.environ.get("REFRESH_INTERVAL", 2), callback=self.action_refresh
+            interval=os.environ.get("REFRESH_INTERVAL", 1), callback=self.action_refresh
         )
 
     async def action_refresh(self):
@@ -69,7 +69,7 @@ class DebugApp(App):
 
     async def add_new_request(self, new_request: Dict):
         widget = self.query_one("#left_panel_list_view")
-        widget.append(
+        widget.prepend(
             LabelItem(
                 label=f"{len(self.requests) + 1}. [b][{new_request.get('method')}][/] {new_request.get('path')}",
                 value=str(new_request.get("request_id")),
