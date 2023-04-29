@@ -4,7 +4,7 @@ import time
 import uuid
 from typing import Callable
 
-from fastapi import Request, Response
+from fastapi import FastAPI, Request, Response
 
 from debug_tool.commons.logger import get_logger
 
@@ -14,8 +14,35 @@ HOST = "0.0.0.0"  # The server's hostname or IP address
 OUT_PORT = 8989  # The port used by the server to send data
 
 
+def start_inspector(app: FastAPI, sqlalchemy_engine: "Engine" = None) -> None:  # noqa
+    app.state.queries = []
+
+    def set_query_start_timer(
+        conn, cursor, statement, parameters, context, executemany
+    ):
+        conn.info["query_start"] = time.perf_counter()
+
+    def after_cursor_execute(conn, cursor, statement, parameters, context, executemany):
+        formatted_query = statement.replace("?", "{}").format(*parameters)
+        sql_data = {
+            "statement": formatted_query.replace("\n", " "),
+            "execution_time": time.perf_counter() - conn.info["query_start"],
+        }
+        app.state.queries.append(sql_data)
+
+    if sqlalchemy_engine:
+        from sqlalchemy import event
+
+        event.listen(sqlalchemy_engine, "before_cursor_execute", set_query_start_timer)
+        event.listen(sqlalchemy_engine, "after_cursor_execute", after_cursor_execute)
+
+    @app.middleware("http")
+    async def inspector_wrapper(request: Request, call_next: Callable) -> Response:
+        request.state.queries = app.state.queries
+        return await inspector(request, call_next)
+
+
 async def inspector(request: Request, call_next: Callable) -> Response:
-    logger.info("Collecting debug info.....")
     # Collect debug information before handling the request
     start_time = time.perf_counter()
     response = await call_next(request)
@@ -33,6 +60,7 @@ async def inspector(request: Request, call_next: Callable) -> Response:
         "method": request.method,
         "cookies": dict(request.cookies),
         "headers": dict(request.headers),
+        "queries": str(request.state.queries),
     }
     # Add, session, auth & user details as well "json_body": await response.json(),
 

@@ -89,14 +89,13 @@ class DebugApp(App):
                 return
 
             result = json.loads(result)
-            logger.info(
-                f"Received data from queue for request ID: {result.get('request_id')}"
-            )
+
             await self.add_new_request(result)
 
         except queue.Empty:
             # handle case where the queue is empty
-            logger.warning("Queue is empty")
+            # logger.warning("Queue is empty")
+            pass
         except json.JSONDecodeError:
             # handle case where the received data is not valid JSON
             logger.error("Received data is not valid JSON")
