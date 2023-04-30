@@ -16,7 +16,7 @@ from ui.components.widgets.text import TextBox
 logger = get_logger(__name__)
 
 
-class DebugApp(App):
+class MainApp(App):
     """FastAPI debug app."""
 
     selected_request = reactive(None)
@@ -94,7 +94,6 @@ class DebugApp(App):
 
         except queue.Empty:
             # handle case where the queue is empty
-            # logger.warning("Queue is empty")
             pass
         except json.JSONDecodeError:
             # handle case where the received data is not valid JSON
@@ -105,5 +104,5 @@ class DebugApp(App):
 
 
 def render_ui(shared_queue: Queue):
-    app = DebugApp(watch_css=True, queue=shared_queue)
+    app = MainApp(watch_css=True, queue=shared_queue)
     app.run()

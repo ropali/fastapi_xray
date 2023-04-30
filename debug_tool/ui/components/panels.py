@@ -113,5 +113,4 @@ class RightPanel(Widget):
         self.query_one("#basics_infobox").update(self.get_basic_details())
         self.query_one("#headers_infobox").update(self.get_headers())
         if "sql_queries" in selected_request:
-            logger.info(f"JSON {type(selected_request['sql_queries'])}")
             self.query_one("#sql_queries_infobox").update(self.get_sql_data())
