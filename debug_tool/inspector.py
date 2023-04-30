@@ -25,7 +25,7 @@ def start_inspector(app: FastAPI, sqlalchemy_engine: "Engine" = None) -> None:  
     def after_cursor_execute(conn, cursor, statement, parameters, context, executemany):
         formatted_query = statement.replace("?", "{}").format(*parameters)
         sql_data = {
-            "statement": formatted_query.replace("\n", " "),
+            "statement": formatted_query,
             "execution_time": time.perf_counter() - conn.info["query_start"],
         }
         app.state.queries.append(sql_data)
@@ -60,7 +60,7 @@ async def inspector(request: Request, call_next: Callable) -> Response:
         "method": request.method,
         "cookies": dict(request.cookies),
         "headers": dict(request.headers),
-        "queries": str(request.state.queries),
+        "sql_queries": request.state.queries,
     }
     # Add, session, auth & user details as well "json_body": await response.json(),
 
@@ -75,5 +75,8 @@ async def inspector(request: Request, call_next: Callable) -> Response:
     except Exception as e:
         logger.error(f"Exception: {e}")
         logger.exception(e)
+    finally:
+        # Clear request data otherwise older values will persist
+        request.state.queries.clear()
 
     return response

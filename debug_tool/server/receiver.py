@@ -28,13 +28,16 @@ class Receiver:
                 conn, addr = self.sock.accept()
                 with conn:
                     # Receive data from the client
+                    data = b""
                     while True:
-                        data = conn.recv(1024)
-                        if not data:
+                        chunk = conn.recv(1024)
+                        if chunk:
+                            data += chunk
+                        else:
                             break
-                        # Process the data received from the client
-                        logger.info(f"Received data: {data.decode('utf-8')}")
-                        self.shared_queue.put(data.decode("utf-8"))
+                    # Process the data received from the client
+                    logger.info(f"Received data: {data.decode('utf-8')}")
+                    self.shared_queue.put(data.decode("utf-8"))
 
             except Exception as e:
                 self.stop()
