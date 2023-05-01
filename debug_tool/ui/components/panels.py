@@ -2,6 +2,7 @@ import json
 from typing import Dict
 
 from commons.logger import get_logger
+from rich.align import Align
 from rich.console import RenderableType
 from rich.layout import Layout
 from rich.panel import Panel
@@ -67,7 +68,9 @@ class RightPanel(Widget):
             f"[b]{self.selected_request.get('status_code')}[/]\t[b]{self.selected_request.get('method')}[/]\t"
             f"{self.selected_request.get('path')}"
         )
-        layout["right"].update(f"[b][{self.selected_request.get('time')} s][/]")
+        layout["right"].update(
+            Align.right(f"[b] ⏱️ {self.selected_request.get('time')} s[/]")
+        )
 
         return Panel(
             layout,
@@ -116,7 +119,7 @@ class RightPanel(Widget):
             border_style="white",
         )
 
-    def render_sql_data(self) -> str | RenderableType:
+    def render_sql_data(self) -> RenderableType | str:
         if not self.selected_request or not self.selected_request.get("sql_queries"):
             return "Nothing to display."
         sql_queries = self.selected_request.get("sql_queries")
