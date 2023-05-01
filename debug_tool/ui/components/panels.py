@@ -1,14 +1,18 @@
+import json
 from typing import Dict
 
 from commons.logger import get_logger
 from rich.console import RenderableType
+from rich.layout import Layout
+from rich.panel import Panel
 from rich.syntax import Syntax
 from textual.app import ComposeResult
 from textual.containers import Container
 from textual.reactive import Reactive
 from textual.widget import Widget
+from textual.widgets import TabbedContent, TabPane
+from ui.components.widgets import WrapperWidget
 from ui.components.widgets.list import ListItems
-from ui.components.widgets.text import InfoBox
 
 logger = get_logger(__name__)
 
@@ -49,44 +53,70 @@ class RightPanel(Widget):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-    def get_basic_details(self) -> str:
+    def render_basic_details(self) -> str | RenderableType:
         if not self.selected_request:
             return "Nothing to display."
 
-        return (
-            f"\nHTTP Method: {self.selected_request.get('method')} \n\n"
-            f"Path: {self.selected_request.get('path')}\n\n"
-            f"Path Params: {self.selected_request.get('path_params')}\n\n"
-            f"Query Params: {self.selected_request.get('query_params')}\n\n"
-            f"Execution Time: {self.selected_request.get('time')} ms\n\n"
-            f"Base URL: {self.selected_request.get('base_url')}\n\n"
-            f"Response Code: {self.selected_request.get('status_code')}"
+        layout = Layout()
+        layout.split_row(
+            Layout(name="left", ratio=9),
+            Layout(name="right", ratio=1),
         )
 
-    def get_headers(self) -> str:
+        layout["left"].update(
+            f"[b]{self.selected_request.get('status_code')}[/]\t[b]{self.selected_request.get('method')}[/]\t"
+            f"{self.selected_request.get('path')}"
+        )
+        layout["right"].update(f"[b][{self.selected_request.get('time')} s][/]")
+
+        return Panel(
+            layout,
+            height=3,
+            border_style="white",
+        )
+
+    def render_headers(self) -> RenderableType | str:
         if not self.selected_request:
             return "Nothing to display."
 
         headers = self.selected_request.get("headers")
 
-        if not headers:
-            return ""
+        return Panel(
+            Syntax(json.dumps(headers, indent=2), "json", padding=2, word_wrap=True),
+            title="Headers",
+            title_align="left",
+            border_style="white",
+        )
 
-        text = "\n"
+    def render_query_params(self) -> RenderableType | str:
+        if not self.selected_request:
+            return "Nothing to display."
 
-        last_key = list(headers.keys())[-1]
+        query_params = self.selected_request.get("query_params")
 
-        for k, v in headers.items():
-            text += f"{k.capitalize()}: {v}"
+        return Panel(
+            Syntax(
+                json.dumps(query_params, indent=2), "json", padding=2, word_wrap=True
+            ),
+            title="Query Params",
+            title_align="left",
+            border_style="white",
+        )
 
-            if last_key == k:
-                text += "\n"
-            else:
-                text += "\n\n"
+    def render_cookies(self) -> RenderableType | str:
+        if not self.selected_request:
+            return "Nothing to display."
 
-        return text
+        cookies = self.selected_request.get("cookies")
 
-    def get_sql_data(self) -> str | Syntax:
+        return Panel(
+            Syntax(json.dumps(cookies, indent=2), "json", padding=2, word_wrap=True),
+            title="Cookies",
+            title_align="left",
+            border_style="white",
+        )
+
+    def render_sql_data(self) -> str | RenderableType:
         if not self.selected_request or not self.selected_request.get("sql_queries"):
             return "Nothing to display."
         sql_queries = self.selected_request.get("sql_queries")
@@ -104,13 +134,28 @@ class RightPanel(Widget):
     def compose(self) -> ComposeResult:
 
         with Container(id="right_panel"):
-            yield InfoBox("BASICS", self.get_basic_details(), id="basics_infobox")
-            yield InfoBox("HEADERS", self.get_headers(), id="headers_infobox")
-            yield InfoBox("SQL Queries", self.get_sql_data(), id="sql_queries_infobox")
+            with TabbedContent():
+                with TabPane("Request"):
+                    yield WrapperWidget(
+                        self.render_basic_details(), id="basics_infobox"
+                    )
+                    yield WrapperWidget(
+                        self.render_query_params(), id="query_params_infobox"
+                    )
+                    yield WrapperWidget(self.render_headers(), id="headers_infobox")
+                    yield WrapperWidget(self.render_cookies(), id="cookies_infobox")
+                with TabPane("Response"):
+                    yield WrapperWidget("Response", id="response_infobox")
+                with TabPane("SQL"):
+                    yield WrapperWidget(
+                        self.render_sql_data(), id="sql_queries_infobox"
+                    )
 
     def watch_selected_request(self, selected_request: Dict) -> None:
         # https://github.com/Textualize/textual/discussions/1683
-        self.query_one("#basics_infobox").update(self.get_basic_details())
-        self.query_one("#headers_infobox").update(self.get_headers())
+        self.query_one("#basics_infobox").update(self.render_basic_details())
+        self.query_one("#headers_infobox").update(self.render_headers())
+        self.query_one("#query_params_infobox").update(self.render_query_params())
+        self.query_one("#cookies_infobox").update(self.render_cookies())
         if "sql_queries" in selected_request:
-            self.query_one("#sql_queries_infobox").update(self.get_sql_data())
+            self.query_one("#sql_queries_infobox").update(self.render_sql_data())

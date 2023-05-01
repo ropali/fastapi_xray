@@ -48,10 +48,10 @@ async def inspector(request: Request, call_next: Callable) -> Response:
     response = await call_next(request)
     end_time = time.perf_counter()
     # Collect debug information after handling the request
-
+    elapsed_time = end_time - start_time
     debug_info = {
         "request_id": str(uuid.uuid4()),
-        "time": start_time - end_time,
+        "time": f"{elapsed_time:.4f}",
         "base_url": str(request.base_url),
         "query_params": dict(request.query_params),
         "path_params": dict(request.path_params),
