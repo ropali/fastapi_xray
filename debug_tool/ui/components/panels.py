@@ -64,12 +64,14 @@ class RightPanel(Widget):
             Layout(name="right", ratio=1),
         )
 
+        request = self.selected_request["request"]
+
         layout["left"].update(
-            f"[b]{self.selected_request.get('status_code')}[/]\t[b]{self.selected_request.get('method')}[/]\t"
-            f"{self.selected_request.get('path')}"
+            f"[b]{request.get('status_code')}[/]\t[b]{request.get('method')}[/]\t"
+            f"[b]{request.get('path')}[/]"
         )
         layout["right"].update(
-            Align.right(f"[b] ⏱️ {self.selected_request.get('time')} s[/]")
+            Align.right(f"[b] ⏱️ {self.selected_request.get('time')} ms[/]")
         )
 
         return Panel(
@@ -82,7 +84,7 @@ class RightPanel(Widget):
         if not self.selected_request:
             return "Nothing to display."
 
-        headers = self.selected_request.get("headers")
+        headers = self.selected_request["request"].get("headers")
 
         return Panel(
             Syntax(json.dumps(headers, indent=2), "json", padding=2, word_wrap=True),
@@ -91,11 +93,24 @@ class RightPanel(Widget):
             border_style="white",
         )
 
+    def render_response(self) -> RenderableType | str:
+        if not self.selected_request:
+            return "Nothing to display."
+
+        data = self.selected_request["response"]
+
+        return Panel(
+            Syntax(json.dumps(data, indent=2), "json", padding=2, word_wrap=True),
+            title="Response",
+            title_align="left",
+            border_style="white",
+        )
+
     def render_query_params(self) -> RenderableType | str:
         if not self.selected_request:
             return "Nothing to display."
 
-        query_params = self.selected_request.get("query_params")
+        query_params = self.selected_request["request"].get("query_params")
 
         return Panel(
             Syntax(
@@ -110,7 +125,7 @@ class RightPanel(Widget):
         if not self.selected_request:
             return "Nothing to display."
 
-        cookies = self.selected_request.get("cookies")
+        cookies = self.selected_request["request"].get("cookies")
 
         return Panel(
             Syntax(json.dumps(cookies, indent=2), "json", padding=2, word_wrap=True),
@@ -148,7 +163,7 @@ class RightPanel(Widget):
                     yield WrapperWidget(self.render_headers(), id="headers_infobox")
                     yield WrapperWidget(self.render_cookies(), id="cookies_infobox")
                 with TabPane("Response"):
-                    yield WrapperWidget("Response", id="response_infobox")
+                    yield WrapperWidget(self.render_response(), id="response_infobox")
                 with TabPane("SQL"):
                     yield WrapperWidget(
                         self.render_sql_data(), id="sql_queries_infobox"
@@ -160,5 +175,7 @@ class RightPanel(Widget):
         self.query_one("#headers_infobox").update(self.render_headers())
         self.query_one("#query_params_infobox").update(self.render_query_params())
         self.query_one("#cookies_infobox").update(self.render_cookies())
+
+        self.query_one("#response_infobox").update(self.render_response())
         if "sql_queries" in selected_request:
             self.query_one("#sql_queries_infobox").update(self.render_sql_data())

@@ -69,9 +69,10 @@ class MainApp(App):
 
     async def add_new_request(self, new_request: Dict):
         widget = self.query_one("#left_panel_list_view")
+        request = new_request["request"]
         widget.prepend(
             LabelItem(
-                label=f"{len(self.requests) + 1}. [b][{new_request.get('method')}][/] {new_request.get('path')}",
+                label=f"{len(self.requests) + 1}. [b][{request.get('method')}][/] {request.get('path')}",
                 value=str(new_request.get("request_id")),
                 classes="request_item",
             )

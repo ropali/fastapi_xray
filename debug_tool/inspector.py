@@ -24,9 +24,10 @@ def start_inspector(app: FastAPI, sqlalchemy_engine: "Engine" = None) -> None:  
 
     def after_cursor_execute(conn, cursor, statement, parameters, context, executemany):
         formatted_query = statement.replace("?", "{}").format(*parameters)
+        elapsed_time = (time.perf_counter() - conn.info["query_start"]) * 1000
         sql_data = {
             "statement": formatted_query,
-            "execution_time": time.perf_counter() - conn.info["query_start"],
+            "execution_time": f"{elapsed_time:.4f}",
         }
         app.state.queries.append(sql_data)
 
@@ -48,21 +49,29 @@ async def inspector(request: Request, call_next: Callable) -> Response:
     response = await call_next(request)
     end_time = time.perf_counter()
     # Collect debug information after handling the request
-    elapsed_time = end_time - start_time
+    elapsed_time = (end_time - start_time) * 1000
     debug_info = {
         "request_id": str(uuid.uuid4()),
         "time": f"{elapsed_time:.4f}",
-        "base_url": str(request.base_url),
-        "query_params": dict(request.query_params),
-        "path_params": dict(request.path_params),
-        "path": str(request.url.path),
-        "status_code": response.status_code,
-        "method": request.method,
-        "cookies": dict(request.cookies),
-        "headers": dict(request.headers),
+        "request": {
+            "base_url": str(request.base_url),
+            "query_params": dict(request.query_params),
+            "path_params": dict(request.path_params),
+            "path": str(request.url.path),
+            "status_code": response.status_code,
+            "method": request.method,
+            "cookies": dict(request.cookies),
+            "headers": dict(request.headers),
+        },
+        "response": {
+            "content_type": response.media_type,
+            "status_code": response.status_code,
+            "cookies": dict(request.cookies),
+            "headers": dict(request.headers),
+        },
         "sql_queries": request.state.queries,
     }
-    # Add, session, auth & user details as well "json_body": await response.json(),
+    # TODO: Add, session, auth & user details as well "json_body": await response.json(),
 
     # Send the response data to the server
     try:
