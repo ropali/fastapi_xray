@@ -139,12 +139,12 @@ class RightPanel(Widget):
             return "Nothing to display."
         sql_queries = self.selected_request.get("sql_queries")
 
-        statements = ""
-        for idx, sql in enumerate(sql_queries):
-            statements += f"-- Took {sql['execution_time']} ms\n"
+        statements = f"-- Total {len(sql_queries)} SQL queries ran \n\n"
+        for idx, sql in enumerate(sql_queries, 1):
+            statements += f"-- [{idx}] Took {sql['execution_time']} ms\n"
             statements += f"{sql['statement']}"
 
-            if idx < len(sql_queries) - 1:
+            if idx < len(sql_queries):
                 statements += "\n\n"
 
         return Syntax(statements, "sql", padding=2)
