@@ -71,7 +71,7 @@ class RightPanel(Widget):
             f"[b]{request.get('path')}[/]"
         )
         layout["right"].update(
-            Align.right(f"[b] ⏱️ {self.selected_request.get('time')} ms[/]")
+            Align.right(f"[b] ⏱️ {self.selected_request.get('elapsed_time')} ms[/]")
         )
 
         return Panel(
