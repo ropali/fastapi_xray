@@ -175,7 +175,5 @@ class RightPanel(Widget):
         self.query_one("#headers_infobox").update(self.render_headers())
         self.query_one("#query_params_infobox").update(self.render_query_params())
         self.query_one("#cookies_infobox").update(self.render_cookies())
-
         self.query_one("#response_infobox").update(self.render_response())
-        if "sql_queries" in selected_request:
-            self.query_one("#sql_queries_infobox").update(self.render_sql_data())
+        self.query_one("#sql_queries_infobox").update(self.render_sql_data())
