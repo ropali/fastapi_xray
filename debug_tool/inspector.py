@@ -68,7 +68,7 @@ def build_debug_info(request: Request, response: Response) -> Dict:
 
     if response.status_code >= 400:
         response_body["error"] = True
-        response_body["error_message"] = "Error Occured"
+        response_body["error_message"] = "Error Occurred"
 
     sql_queries = request.state.queries
 
@@ -80,19 +80,20 @@ def build_debug_info(request: Request, response: Response) -> Dict:
 
 
 async def inspector(request: Request, call_next: Callable) -> Response:
-    start_time = time.perf_counter()
+    elapsed_time = "N/A"
 
     try:
+        start_time = time.perf_counter()
         response = await call_next(request)
+        end_time = time.perf_counter()
+        elapsed_time = (end_time - start_time) * 1000
+        elapsed_time = f"{elapsed_time:.4f}"
     except Exception as e:
         response = Response(status_code=500, content=str(e))
 
-    end_time = time.perf_counter()
-    elapsed_time = (end_time - start_time) * 1000
-
     debug_info = build_debug_info(request, response)
 
-    debug_info["elapsed_time"] = f"{elapsed_time:.4f}"
+    debug_info["elapsed_time"] = elapsed_time
 
     try:
         out_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
