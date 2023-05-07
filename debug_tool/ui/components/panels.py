@@ -8,12 +8,11 @@ from textual.reactive import Reactive
 from textual.widget import Widget
 from textual.widgets import TabbedContent, TabPane
 from ui.components.panel_factory import (
-    BasicDetailsPanelFactory,
     CookiesPanelFactory,
     HeadersPanelFactory,
     PanelFactory,
     QueryParamsPanelFactory,
-    ResponseCookiesPanelFactory,
+    RequestDetailsPanelFactory,
     ResponseErrorPanelFactory,
     ResponseHeadersPanelFactory,
     SQLPanelFactory,
@@ -63,13 +62,12 @@ class RightPanel(Widget):
         # initialize the factories
         self.tabs = {
             "request": [
-                BasicDetailsPanelFactory(),
+                RequestDetailsPanelFactory(),
                 QueryParamsPanelFactory(),
                 HeadersPanelFactory(),
                 CookiesPanelFactory(),
             ],
             "response": [
-                ResponseCookiesPanelFactory(),
                 ResponseHeadersPanelFactory(),
                 ResponseErrorPanelFactory(),
             ],

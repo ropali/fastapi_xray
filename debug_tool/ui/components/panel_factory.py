@@ -2,11 +2,14 @@ import json
 from abc import ABC, abstractmethod
 from typing import Dict
 
+from commons.logger import get_logger
 from rich.align import Align
 from rich.layout import Layout
 from rich.panel import Panel
 from rich.syntax import Syntax
 from ui.components.widgets.panels import SyntaxPanel
+
+logger = get_logger(__name__)
 
 
 class PanelFactory(ABC):
@@ -46,14 +49,8 @@ class ResponseHeadersPanelFactory(HeadersPanelFactory):
         )
 
 
-class BasicDetailsPanelFactory(PanelFactory):
-    def parse_data(self, data):
-        pass
-
-    def create_panel(self, selected_request: Dict):
-        if not selected_request:
-            return "Nothing to display"
-
+class RequestDetailsPanelFactory(PanelFactory):
+    def parse_data(self, selected_request: Dict):
         request = selected_request.get("request")
 
         layout = Layout()
@@ -70,8 +67,18 @@ class BasicDetailsPanelFactory(PanelFactory):
             Align.right(f"[b] ⏱️ {selected_request.get('elapsed_time')} ms[/]")
         )
 
+        return layout
+
+    def create_panel(self, selected_request: Dict):
+        if not selected_request:
+            return Panel(
+                Align.center("[b]No request selected![/]"),
+                height=3,
+                border_style="white",
+            )
+
         return Panel(
-            layout,
+            self.parse_data(selected_request),
             height=3,
             border_style="white",
         )
@@ -105,15 +112,6 @@ class CookiesPanelFactory(PanelFactory):
         ).render()
 
 
-class ResponseCookiesPanelFactory(CookiesPanelFactory):
-    def parse_data(self, selected_request: Dict):
-        if not selected_request:
-            return "{}"
-        return json.dumps(
-            selected_request.get("response", {}).get("cookies", {}), indent=2
-        )
-
-
 class ResponseErrorPanelFactory(PanelFactory):
     def parse_data(self, selected_request: Dict):
         if not selected_request:
@@ -132,9 +130,10 @@ class ResponseErrorPanelFactory(PanelFactory):
 
 class SQLPanelFactory(PanelFactory):
     def parse_data(self, selected_request: Dict):
-        if not selected_request:
+        if not selected_request or len(selected_request.get("sql", [])) == 0:
             return "-- No SQL Queries Found! --"
-        sql_queries = selected_request.get("sql_queries", [])
+
+        sql_queries = selected_request.get("sql", [])
 
         statements = f"-- Total {len(sql_queries)} SQL queries ran \n\n"
         for idx, sql in enumerate(sql_queries, 1):

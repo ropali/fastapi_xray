@@ -60,10 +60,7 @@ def build_debug_info(request: Request, response: Response) -> Dict:
     }
 
     response_body = {
-        "content_type": response.headers.get("Content-Type"),
-        "status_code": response.status_code,
         "headers": dict(response.headers) if hasattr(response, "headers") else None,
-        "cookies": dict(response.cookies) if hasattr(response, "cookies") else None,
     }
 
     if response.status_code >= 400:
