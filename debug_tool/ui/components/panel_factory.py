@@ -84,6 +84,21 @@ class RequestDetailsPanelFactory(PanelFactory):
         )
 
 
+class RequestBodyPanelFactory(PanelFactory):
+    def parse_data(self, selected_request: Dict):
+        if (
+            not selected_request
+            or selected_request.get("request", {}).get("body") is None
+        ):
+            return "{}"
+        return json.dumps(selected_request.get("request", {}).get("body", {}), indent=2)
+
+    def create_panel(self, selected_request: Dict):
+        return SyntaxPanel(
+            code=self.parse_data(selected_request), lexer="json", title="Body"
+        ).render()
+
+
 class QueryParamsPanelFactory(PanelFactory):
     def parse_data(self, selected_request: Dict):
         if not selected_request:

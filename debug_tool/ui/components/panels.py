@@ -12,6 +12,7 @@ from ui.components.panel_factory import (
     HeadersPanelFactory,
     PanelFactory,
     QueryParamsPanelFactory,
+    RequestBodyPanelFactory,
     RequestDetailsPanelFactory,
     ResponseErrorPanelFactory,
     ResponseHeadersPanelFactory,
@@ -63,6 +64,7 @@ class RightPanel(Widget):
         self.tabs = {
             "request": [
                 RequestDetailsPanelFactory(),
+                RequestBodyPanelFactory(),
                 QueryParamsPanelFactory(),
                 HeadersPanelFactory(),
                 CookiesPanelFactory(),

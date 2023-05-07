@@ -29,6 +29,7 @@ def start_inspector(app: FastAPI, sqlalchemy_engine: "Engine" = None) -> None:  
             "statement": formatted_query,
             "execution_time": f"{elapsed_time:.4f}",
         }
+        # Maintain the queries state so that it can be accessed in the middleware
         app.state.queries.append(sql_data)
 
     if sqlalchemy_engine:
@@ -43,7 +44,7 @@ def start_inspector(app: FastAPI, sqlalchemy_engine: "Engine" = None) -> None:  
         return await inspector(request, call_next)
 
 
-def build_debug_info(request: Request, response: Response) -> Dict:
+async def build_debug_info(request: Request, response: Response) -> Dict:
     debug_info = {
         "request_id": str(uuid.uuid4()),
     }
@@ -76,8 +77,28 @@ def build_debug_info(request: Request, response: Response) -> Dict:
     return debug_info
 
 
+async def set_body(request: Request, body: bytes):
+    async def receive():
+        return {"type": "http.request", "body": body}
+
+    request._receive = receive
+
+
+async def get_body(request: Request) -> bytes:
+    body = await request.body()
+    await set_body(request, body)
+    return body
+
+
 async def inspector(request: Request, call_next: Callable) -> Response:
     elapsed_time = "N/A"
+    body = None
+
+    if request.headers.get("Content-Type") == "application/json":
+        # This is workaround to get request body in the middleware
+        # https://stackoverflow.com/a/74778485/6832201
+        await set_body(request, await request.body())
+        body = await request.json()
 
     try:
         start_time = time.perf_counter()
@@ -88,9 +109,11 @@ async def inspector(request: Request, call_next: Callable) -> Response:
     except Exception as e:
         response = Response(status_code=500, content=str(e))
 
-    debug_info = build_debug_info(request, response)
+    debug_info = await build_debug_info(request, response)
 
     debug_info["elapsed_time"] = elapsed_time
+
+    debug_info["request"]["body"] = body
 
     try:
         out_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
