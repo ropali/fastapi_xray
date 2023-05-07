@@ -37,7 +37,7 @@ class HeadersPanelFactory(PanelFactory):
     def create_panel(self, selected_request):
         return SyntaxPanel(
             code=self.parse_data(selected_request), lexer="json", title="Headers"
-        ).render()
+        )
 
 
 class ResponseHeadersPanelFactory(HeadersPanelFactory):
@@ -96,7 +96,7 @@ class RequestBodyPanelFactory(PanelFactory):
     def create_panel(self, selected_request: Dict):
         return SyntaxPanel(
             code=self.parse_data(selected_request), lexer="json", title="Body"
-        ).render()
+        )
 
 
 class QueryParamsPanelFactory(PanelFactory):
@@ -110,7 +110,7 @@ class QueryParamsPanelFactory(PanelFactory):
     def create_panel(self, selected_request: Dict):
         return SyntaxPanel(
             code=self.parse_data(selected_request), lexer="json", title="Query Params"
-        ).render()
+        )
 
 
 class CookiesPanelFactory(PanelFactory):
@@ -124,7 +124,7 @@ class CookiesPanelFactory(PanelFactory):
     def create_panel(self, selected_request: Dict):
         return SyntaxPanel(
             code=self.parse_data(selected_request), lexer="json", title="Cookies"
-        ).render()
+        )
 
 
 class ResponseErrorPanelFactory(PanelFactory):
@@ -140,7 +140,7 @@ class ResponseErrorPanelFactory(PanelFactory):
     def create_panel(self, selected_request: Dict):
         return SyntaxPanel(
             code=self.parse_data(selected_request), lexer="txt", title="Error Trace"
-        ).render()
+        )
 
 
 class SQLPanelFactory(PanelFactory):
