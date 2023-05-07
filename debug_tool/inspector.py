@@ -92,13 +92,9 @@ async def get_body(request: Request) -> bytes:
 
 async def inspector(request: Request, call_next: Callable) -> Response:
     elapsed_time = "N/A"
-    body = None
 
-    if request.headers.get("Content-Type") == "application/json":
-        # This is workaround to get request body in the middleware
-        # https://stackoverflow.com/a/74778485/6832201
-        await set_body(request, await request.body())
-        body = await request.json()
+    body = None
+    body = await extract_body(body, request)
 
     try:
         start_time = time.perf_counter()
@@ -116,13 +112,26 @@ async def inspector(request: Request, call_next: Callable) -> Response:
     debug_info["request"]["body"] = body
 
     try:
-        out_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        out_sock.connect((HOST, OUT_PORT))
-        out_sock.sendall(json.dumps(debug_info).encode("utf-8"))
-        logger.info("Sent data to receiver")
+        send_debug_info(debug_info)
     except Exception as e:
         logger.error(f"Exception: {e}")
     finally:
         request.state.queries.clear()
 
     return response
+
+
+async def extract_body(body, request):
+    if request.headers.get("Content-Type") == "application/json":
+        # This is workaround to get request body in the middleware
+        # https://stackoverflow.com/a/74778485/6832201
+        await set_body(request, await request.body())
+        body = await request.json()
+    return body
+
+
+def send_debug_info(debug_info: Dict):
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as out_sock:
+        out_sock.connect((HOST, OUT_PORT))
+        out_sock.sendall(json.dumps(debug_info).encode("utf-8"))
+        logger.info("Sent data to receiver")
