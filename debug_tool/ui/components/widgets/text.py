@@ -1,10 +1,8 @@
 from commons.logger import get_logger
 from rich import box
 from rich.align import Align
-from rich.console import RenderableType
 from rich.panel import Panel
 from textual.widget import Widget
-from textual.widgets import Static
 
 logger = get_logger(__name__)
 
@@ -38,18 +36,4 @@ class TextBox(Widget):
             border_style="white",
             box=box.ROUNDED,
             height=self.height,
-        )
-
-
-class InfoBox(Static):
-    def __init__(self, border_title: str, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
-        self.border_title = border_title
-
-    def render(self) -> RenderableType:
-        return Panel(
-            Align.left(self.renderable, vertical="top"),
-            title=self.border_title,
-            border_style="white",
-            box=box.ROUNDED,
         )

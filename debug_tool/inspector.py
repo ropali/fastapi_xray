@@ -2,7 +2,7 @@ import json
 import socket
 import time
 import uuid
-from typing import Callable
+from typing import Callable, Dict
 
 from fastapi import FastAPI, Request, Response
 
@@ -24,9 +24,10 @@ def start_inspector(app: FastAPI, sqlalchemy_engine: "Engine" = None) -> None:  
 
     def after_cursor_execute(conn, cursor, statement, parameters, context, executemany):
         formatted_query = statement.replace("?", "{}").format(*parameters)
+        elapsed_time = (time.perf_counter() - conn.info["query_start"]) * 1000
         sql_data = {
             "statement": formatted_query,
-            "execution_time": time.perf_counter() - conn.info["query_start"],
+            "execution_time": f"{elapsed_time:.4f}",
         }
         app.state.queries.append(sql_data)
 
@@ -42,16 +43,12 @@ def start_inspector(app: FastAPI, sqlalchemy_engine: "Engine" = None) -> None:  
         return await inspector(request, call_next)
 
 
-async def inspector(request: Request, call_next: Callable) -> Response:
-    # Collect debug information before handling the request
-    start_time = time.perf_counter()
-    response = await call_next(request)
-    end_time = time.perf_counter()
-    # Collect debug information after handling the request
-
+def build_debug_info(request: Request, response: Response) -> Dict:
     debug_info = {
         "request_id": str(uuid.uuid4()),
-        "time": start_time - end_time,
+    }
+
+    request_body = {
         "base_url": str(request.base_url),
         "query_params": dict(request.query_params),
         "path_params": dict(request.path_params),
@@ -60,23 +57,49 @@ async def inspector(request: Request, call_next: Callable) -> Response:
         "method": request.method,
         "cookies": dict(request.cookies),
         "headers": dict(request.headers),
-        "sql_queries": request.state.queries,
     }
-    # Add, session, auth & user details as well "json_body": await response.json(),
 
-    # Send the response data to the server
+    response_body = {
+        "headers": dict(response.headers) if hasattr(response, "headers") else None,
+    }
+
+    if response.status_code >= 400:
+        response_body["error"] = True
+        response_body["error_message"] = "Error Occurred"
+
+    sql_queries = request.state.queries
+
+    debug_info["request"] = request_body
+    debug_info["response"] = response_body
+    debug_info["sql"] = sql_queries
+
+    return debug_info
+
+
+async def inspector(request: Request, call_next: Callable) -> Response:
+    elapsed_time = "N/A"
+
     try:
-        # Create a socket object for sending data
-        out_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        start_time = time.perf_counter()
+        response = await call_next(request)
+        end_time = time.perf_counter()
+        elapsed_time = (end_time - start_time) * 1000
+        elapsed_time = f"{elapsed_time:.4f}"
+    except Exception as e:
+        response = Response(status_code=500, content=str(e))
 
+    debug_info = build_debug_info(request, response)
+
+    debug_info["elapsed_time"] = elapsed_time
+
+    try:
+        out_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         out_sock.connect((HOST, OUT_PORT))
         out_sock.sendall(json.dumps(debug_info).encode("utf-8"))
-        logger.info("sent data to receiver")
+        logger.info("Sent data to receiver")
     except Exception as e:
         logger.error(f"Exception: {e}")
-        logger.exception(e)
     finally:
-        # Clear request data otherwise older values will persist
         request.state.queries.clear()
 
     return response
