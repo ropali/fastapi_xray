@@ -74,7 +74,7 @@ def build_debug_info(request: Request, response: Response) -> Dict:
 
     debug_info["request"] = request_body
     debug_info["response"] = response_body
-    debug_info["sql_queries"] = sql_queries
+    debug_info["sql"] = sql_queries
 
     return debug_info
 
