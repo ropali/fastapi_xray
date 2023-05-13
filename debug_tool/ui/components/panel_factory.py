@@ -128,18 +128,26 @@ class CookiesPanelFactory(PanelFactory):
 
 
 class ResponseErrorPanelFactory(PanelFactory):
+    _lexer_type = "txt"
+
     def parse_data(self, selected_request: Dict):
         if not selected_request:
             return ""
         response = selected_request.get("response", {})
 
-        error = response.get("error")
+        error = response.get("error", "")
 
-        return error if error else ""
+        if isinstance(error, dict) or isinstance(error, list):
+            self._lexer_type = "json"
+            return json.dumps(error, indent=2)
+
+        return error
 
     def create_panel(self, selected_request: Dict):
         return SyntaxPanel(
-            code=self.parse_data(selected_request), lexer="txt", title="Error"
+            code=self.parse_data(selected_request),
+            lexer=self._lexer_type,
+            title="Error",
         )
 
 

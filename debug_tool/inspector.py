@@ -2,9 +2,10 @@ import json
 import socket
 import time
 import uuid
-from typing import Callable, Dict
+from typing import Callable, Dict, Union
 
 from fastapi import FastAPI, HTTPException, Request, Response
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
 from debug_tool.commons.logger import get_logger
@@ -41,9 +42,12 @@ def start_inspector(app: FastAPI, sqlalchemy_engine: "Engine" = None) -> None:  
         event.listen(sqlalchemy_engine, "after_cursor_execute", after_cursor_execute)
 
     @app.exception_handler(HTTPException)
-    async def _http_exception_handler(request: Request, exc: HTTPException):
-        """This is just workaround to capture HTTPException.
-        HTTPException is basically handled error so not able to catch
+    @app.exception_handler(RequestValidationError)
+    async def __exception_handler(
+        request: Request, exc: Union[HTTPException, RequestValidationError]
+    ) -> None:
+        """This is just workaround to capture HTTPException, RequestValidationError.
+        These exceptions basically handled error which means FastAPI handles specially.
         it inside the http middleware, so re-raise error from so that
         it can be caught in the middleware
         """
@@ -76,9 +80,14 @@ async def build_debug_info(request: Request, response: Response) -> Dict:
     }
 
     if response.status_code >= 400:
-        response_body["error"] = (
-            response.body.decode("utf-8") if hasattr(response, "body") else ""
-        )
+        err = response.body.decode("utf-8") if hasattr(response, "body") else ""
+
+        try:
+            err = json.loads(err)
+        except json.JSONDecodeError:
+            pass
+
+        response_body["error"] = err
 
     sql_queries = request.state.queries
 
@@ -118,6 +127,8 @@ async def inspector(request: Request, call_next: Callable) -> Response:
 
     except HTTPException as htex:
         response = JSONResponse(status_code=htex.status_code, content=htex.detail)
+    except RequestValidationError as re:
+        response = JSONResponse(status_code=422, content=re.errors())
     except Exception as e:
         response = JSONResponse(status_code=500, content=str(e))
 
