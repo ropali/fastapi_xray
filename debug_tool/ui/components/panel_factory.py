@@ -132,14 +132,14 @@ class ResponseErrorPanelFactory(PanelFactory):
         if not selected_request:
             return ""
         response = selected_request.get("response", {})
-        if response.get("error"):
-            return response.get("error_message")
 
-        return "No error occurred!"
+        error = response.get("error")
+
+        return error if error else ""
 
     def create_panel(self, selected_request: Dict):
         return SyntaxPanel(
-            code=self.parse_data(selected_request), lexer="txt", title="Error Trace"
+            code=self.parse_data(selected_request), lexer="txt", title="Error"
         )
 
 

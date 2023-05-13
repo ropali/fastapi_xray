@@ -4,7 +4,8 @@ import time
 import uuid
 from typing import Callable, Dict
 
-from fastapi import FastAPI, Request, Response
+from fastapi import FastAPI, HTTPException, Request, Response
+from fastapi.responses import JSONResponse
 
 from debug_tool.commons.logger import get_logger
 
@@ -16,6 +17,7 @@ OUT_PORT = 8989  # The port used by the server to send data
 
 def start_inspector(app: FastAPI, sqlalchemy_engine: "Engine" = None) -> None:  # noqa
     app.state.queries = []
+    app.state.error = None
 
     def set_query_start_timer(
         conn, cursor, statement, parameters, context, executemany
@@ -37,6 +39,15 @@ def start_inspector(app: FastAPI, sqlalchemy_engine: "Engine" = None) -> None:  
 
         event.listen(sqlalchemy_engine, "before_cursor_execute", set_query_start_timer)
         event.listen(sqlalchemy_engine, "after_cursor_execute", after_cursor_execute)
+
+    @app.exception_handler(HTTPException)
+    async def _http_exception_handler(request: Request, exc: HTTPException):
+        """This is just workaround to capture HTTPException.
+        HTTPException is basically handled error so not able to catch
+        it inside the http middleware, so re-raise error from so that
+        it can be caught in the middleware
+        """
+        raise exc
 
     @app.middleware("http")
     async def inspector_wrapper(request: Request, call_next: Callable) -> Response:
@@ -65,8 +76,9 @@ async def build_debug_info(request: Request, response: Response) -> Dict:
     }
 
     if response.status_code >= 400:
-        response_body["error"] = True
-        response_body["error_message"] = "Error Occurred"
+        response_body["error"] = (
+            response.body.decode("utf-8") if hasattr(response, "body") else ""
+        )
 
     sql_queries = request.state.queries
 
@@ -98,12 +110,16 @@ async def inspector(request: Request, call_next: Callable) -> Response:
 
     try:
         start_time = time.perf_counter()
+
         response = await call_next(request)
         end_time = time.perf_counter()
         elapsed_time = (end_time - start_time) * 1000
         elapsed_time = f"{elapsed_time:.4f}"
+
+    except HTTPException as htex:
+        response = JSONResponse(status_code=htex.status_code, content=htex.detail)
     except Exception as e:
-        response = Response(status_code=500, content=str(e))
+        response = JSONResponse(status_code=500, content=str(e))
 
     debug_info = await build_debug_info(request, response)
 
