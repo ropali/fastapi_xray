@@ -8,7 +8,7 @@ from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
-from debug_tool.commons.logger import get_logger
+from fastapi_xray.commons.logger import get_logger
 
 logger = get_logger(__name__)
 

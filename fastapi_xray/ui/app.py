@@ -28,7 +28,6 @@ class MainApp(App):
 
     CSS_PATH = "main.css"
     BINDINGS = [
-        ("d", "toggle_dark", "Toggle dark mode"),
         ("r", "refresh", "Refresh"),
         ("c", "clear_all", "Clear All"),
     ]
@@ -36,7 +35,7 @@ class MainApp(App):
     def compose(self) -> ComposeResult:
         """Called to add widgets to the app."""
         yield Container(
-            TextBox("FastAPI Debug", "FastAPI Inspector", False, "center"),
+            TextBox("", "[b]✘ FastAPI XRAY ✘[/]", False, "center"),
             id="app_title",
         )
         yield LeftPanel()
@@ -51,10 +50,6 @@ class MainApp(App):
 
     async def action_refresh(self):
         self.poll()
-
-    def action_toggle_dark(self) -> None:
-        """An action to toggle dark mode."""
-        self.dark = not self.dark
 
     async def action_clear_all(self):
         """An action to clear all requests."""
