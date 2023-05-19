@@ -1,9 +1,9 @@
 import json
 import os
 from multiprocessing import Queue
-from typing import Dict
 
 from commons.logger import get_logger
+from schemas import APIRequest
 from textual import work
 from textual.app import App, ComposeResult
 from textual.containers import Container
@@ -63,22 +63,24 @@ class MainApp(App):
         self.requests = {}
 
     def on_list_view_selected(self, event: ListView.Selected):
-        self.query_one(RightPanel).selected_request = self.requests.get(
-            event.item.value
+        request = self.requests.get(event.item.value)
+        self.query_one(RightPanel).selected_request = request
+        logger.info(
+            f"Selected request: {self.query_one(RightPanel).selected_request} {request}"
         )
 
-    async def add_new_request(self, new_request: Dict):
+    async def add_new_request(self, new_request: APIRequest):
         widget = self.query_one("#left_panel_list_view")
-        request = new_request["request"]
+        request = new_request.request
         widget.prepend(
             LabelItem(
-                label=f"{len(self.requests) + 1}. [b][{request.get('method')}][/] {request.get('path')}",
-                value=str(new_request.get("request_id")),
+                label=f"{len(self.requests) + 1}. [b][{request.method}][/] {request.path}",
+                value=str(new_request.request_id),
                 classes="request_item",
             )
         )
 
-        self.requests[new_request.get("request_id")] = new_request
+        self.requests[new_request.request_id] = new_request
 
     @work(exclusive=True)
     async def poll(self):
@@ -90,8 +92,8 @@ class MainApp(App):
                 return
 
             result = json.loads(result)
-
-            await self.add_new_request(result)
+            api_request = APIRequest(**result)
+            await self.add_new_request(api_request)
 
         except queue.Empty:
             # handle case where the queue is empty

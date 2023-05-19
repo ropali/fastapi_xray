@@ -1,7 +1,6 @@
-from typing import Dict
-
 from commons.logger import get_logger
 from rich.console import RenderableType
+from schemas import APIRequest
 from textual.app import ComposeResult
 from textual.containers import Container
 from textual.reactive import Reactive
@@ -55,7 +54,7 @@ class LeftPanel(Widget):
 
 
 class RightPanel(Widget):
-    selected_request: Reactive[RenderableType] = Reactive({})
+    selected_request: Reactive[RenderableType] = Reactive(None)
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -78,10 +77,10 @@ class RightPanel(Widget):
             ],
         }
 
-    def create_panel(self, data: Dict, factory: PanelFactory) -> RenderableType:
+    def create_panel(self, data: APIRequest, factory: PanelFactory) -> RenderableType:
         return factory.create_panel(data)
 
-    def watch_selected_request(self, selected_request: Dict) -> None:
+    def watch_selected_request(self, selected_request: APIRequest) -> None:
         for _, factories in self.tabs.items():
             for factory in factories:
                 self.query_one(f"#{factory.id}").update(

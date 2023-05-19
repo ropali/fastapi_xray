@@ -87,7 +87,9 @@ async def build_debug_info(request: Request, response: Response) -> Dict:
         except json.JSONDecodeError:
             pass
 
-        response_body["error"] = err
+        response_body["error"] = {
+            "message": err,
+        }
 
     sql_queries = request.state.queries
 
@@ -148,7 +150,7 @@ async def inspector(request: Request, call_next: Callable) -> Response:
     return response
 
 
-async def extract_body(body, request):
+async def extract_body(body: bytes, request: Request) -> bytes:
     if request.headers.get("Content-Type") == "application/json":
         # This is workaround to get request body in the middleware
         # https://stackoverflow.com/a/74778485/6832201

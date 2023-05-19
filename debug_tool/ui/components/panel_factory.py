@@ -1,12 +1,12 @@
 import json
 from abc import ABC, abstractmethod
-from typing import Dict
 
 from commons.logger import get_logger
 from rich.align import Align
 from rich.layout import Layout
 from rich.panel import Panel
 from rich.syntax import Syntax
+from schemas import APIRequest
 from ui.components.widgets.panels import SyntaxPanel
 
 logger = get_logger(__name__)
@@ -14,11 +14,11 @@ logger = get_logger(__name__)
 
 class PanelFactory(ABC):
     @abstractmethod
-    def create_panel(self, data):
+    def create_panel(self, data: APIRequest):
         raise NotImplementedError()
 
     @abstractmethod
-    def parse_data(self, data):
+    def parse_data(self, data: APIRequest):
         raise NotImplementedError()
 
     @property
@@ -27,31 +27,27 @@ class PanelFactory(ABC):
 
 
 class HeadersPanelFactory(PanelFactory):
-    def parse_data(self, selected_request: Dict):
+    def parse_data(self, selected_request: APIRequest):
         if not selected_request:
             return "{}"
-        return json.dumps(
-            selected_request.get("request", {}).get("headers", {}), indent=2
-        )
+        return json.dumps(selected_request.request.headers, indent=2)
 
-    def create_panel(self, selected_request):
+    def create_panel(self, selected_request: APIRequest):
         return SyntaxPanel(
             code=self.parse_data(selected_request), lexer="json", title="Headers"
         )
 
 
 class ResponseHeadersPanelFactory(HeadersPanelFactory):
-    def parse_data(self, selected_request: Dict):
+    def parse_data(self, selected_request: APIRequest):
         if not selected_request:
             return "{}"
-        return json.dumps(
-            selected_request.get("response", {}).get("headers", {}), indent=2
-        )
+        return json.dumps(selected_request.response.headers, indent=2)
 
 
 class RequestDetailsPanelFactory(PanelFactory):
-    def parse_data(self, selected_request: Dict):
-        request = selected_request.get("request")
+    def parse_data(self, selected_request: APIRequest):
+        request = selected_request.request
 
         layout = Layout()
         layout.split_row(
@@ -60,16 +56,16 @@ class RequestDetailsPanelFactory(PanelFactory):
         )
 
         layout["left"].update(
-            f"[b]{request.get('status_code')}[/]\t[b]{request.get('method')}[/]\t"
-            f"[b]{request.get('path')}[/]"
+            f"[b]{request.status_code}[/]\t[b]{request.method}[/]\t"
+            f"[b]{request.path}[/]"
         )
         layout["right"].update(
-            Align.right(f"[b] ⏱️ {selected_request.get('elapsed_time')} ms[/]")
+            Align.right(f"[b] ⏱️ {selected_request.elapsed_time} ms[/]")
         )
 
         return layout
 
-    def create_panel(self, selected_request: Dict):
+    def create_panel(self, selected_request: APIRequest):
         if not selected_request:
             return Panel(
                 Align.center("[b]No request selected![/]"),
@@ -85,43 +81,36 @@ class RequestDetailsPanelFactory(PanelFactory):
 
 
 class RequestBodyPanelFactory(PanelFactory):
-    def parse_data(self, selected_request: Dict):
-        if (
-            not selected_request
-            or selected_request.get("request", {}).get("body") is None
-        ):
+    def parse_data(self, selected_request: APIRequest):
+        if not selected_request or selected_request.request.body is None:
             return "{}"
-        return json.dumps(selected_request.get("request", {}).get("body", {}), indent=2)
+        return json.dumps(selected_request.request.body, indent=2)
 
-    def create_panel(self, selected_request: Dict):
+    def create_panel(self, selected_request: APIRequest):
         return SyntaxPanel(
             code=self.parse_data(selected_request), lexer="json", title="Body"
         )
 
 
 class QueryParamsPanelFactory(PanelFactory):
-    def parse_data(self, selected_request: Dict):
+    def parse_data(self, selected_request: APIRequest):
         if not selected_request:
             return "{}"
-        return json.dumps(
-            selected_request.get("request", {}).get("query_params", {}), indent=2
-        )
+        return json.dumps(selected_request.request.query_params, indent=2)
 
-    def create_panel(self, selected_request: Dict):
+    def create_panel(self, selected_request: APIRequest):
         return SyntaxPanel(
             code=self.parse_data(selected_request), lexer="json", title="Query Params"
         )
 
 
 class CookiesPanelFactory(PanelFactory):
-    def parse_data(self, selected_request: Dict):
+    def parse_data(self, selected_request: APIRequest):
         if not selected_request:
             return "{}"
-        return json.dumps(
-            selected_request.get("request", {}).get("cookies", {}), indent=2
-        )
+        return json.dumps(selected_request.request.cookies, indent=2)
 
-    def create_panel(self, selected_request: Dict):
+    def create_panel(self, selected_request: APIRequest):
         return SyntaxPanel(
             code=self.parse_data(selected_request), lexer="json", title="Cookies"
         )
@@ -130,20 +119,20 @@ class CookiesPanelFactory(PanelFactory):
 class ResponseErrorPanelFactory(PanelFactory):
     _lexer_type = "txt"
 
-    def parse_data(self, selected_request: Dict):
-        if not selected_request:
+    def parse_data(self, selected_request: APIRequest):
+        if not selected_request or selected_request.response.error is None:
             return ""
-        response = selected_request.get("response", {})
 
-        error = response.get("error", "")
+        response = selected_request.response
+        error_msg = response.error.message
+        self._lexer_type = response.error.lexer_type
 
-        if isinstance(error, dict) or isinstance(error, list):
-            self._lexer_type = "json"
-            return json.dumps(error, indent=2)
+        if isinstance(error_msg, dict) or isinstance(error_msg, list):
+            return json.dumps(error_msg, indent=2)
 
-        return error
+        return error_msg
 
-    def create_panel(self, selected_request: Dict):
+    def create_panel(self, selected_request: APIRequest):
         return SyntaxPanel(
             code=self.parse_data(selected_request),
             lexer=self._lexer_type,
@@ -152,16 +141,16 @@ class ResponseErrorPanelFactory(PanelFactory):
 
 
 class SQLPanelFactory(PanelFactory):
-    def parse_data(self, selected_request: Dict):
-        if not selected_request or len(selected_request.get("sql", [])) == 0:
+    def parse_data(self, selected_request: APIRequest):
+        if not selected_request or len(selected_request.sql) == 0:
             return "-- No SQL Queries Found! --"
 
-        sql_queries = selected_request.get("sql", [])
+        sql_queries = selected_request.sql
 
         statements = f"-- Total {len(sql_queries)} SQL queries ran \n\n"
         for idx, sql in enumerate(sql_queries, 1):
-            statements += f"-- [{idx}] Took {sql['execution_time']} ms\n"
-            statements += f"{sql['statement']}"
+            statements += f"-- [{idx}] Took {sql.execution_time} ms\n"
+            statements += f"{sql.statement}"
 
             if idx < len(sql_queries):
                 statements += "\n\n"
