@@ -23,7 +23,7 @@ def start_xray(
     app: FastAPI,
     sqlalchemy_engine: "Engine" = None,  # noqa :F821
     host: str = "0.0.0.0",
-    port: int = 8899,
+    port: int = 8989,
 ) -> None:
     """Starts X-Ray integration for FastAPI.
 
