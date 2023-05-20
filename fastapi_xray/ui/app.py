@@ -35,7 +35,7 @@ class MainApp(App):
     def compose(self) -> ComposeResult:
         """Called to add widgets to the app."""
         yield Container(
-            TextBox("", "[b]✘ FastAPI XRAY ✘[/]", False, "center"),
+            TextBox("", "[b]✘ FastAPI X-Ray ✘[/]", False, "center"),
             id="app_title",
         )
         yield LeftPanel()
