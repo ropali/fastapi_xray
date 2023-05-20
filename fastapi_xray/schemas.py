@@ -21,13 +21,13 @@ class ResponseError(BaseModel):
 
     @property
     def lexer_type(self):
-        _lexer = "txt"
+        _lexer = "json"
 
-        if self.message is list or self.message is Dict:
+        if isinstance(self.message, str):
             try:
                 json.loads(self.message)
                 _lexer = "json"
-            except Exception:
+            except json.decoder.JSONDecodeError:
                 _lexer = "txt"
         return _lexer
 
