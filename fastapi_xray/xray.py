@@ -1,4 +1,5 @@
 import json
+import os
 import socket
 import time
 import uuid
@@ -12,11 +13,42 @@ from fastapi_xray.commons.logger import get_logger
 
 logger = get_logger(__name__)
 
-HOST = "0.0.0.0"  # The server's hostname or IP address
-OUT_PORT = 8989  # The port used by the server to send data
+HOST = os.environ.get("XRAY_HOST", "0.0.0.0")  # The server's hostname or IP address
+OUT_PORT = int(
+    os.environ.get("XRAY_PORT", 8989)
+)  # The port used by the server to receive data for display
 
 
-def start_xray(app: FastAPI, sqlalchemy_engine: "Engine" = None) -> None:  # noqa
+def start_xray(
+    app: FastAPI,
+    sqlalchemy_engine: "Engine" = None,  # noqa :F821
+    host: str = "0.0.0.0",
+    port: int = 8899,
+) -> None:
+    """Starts X-Ray integration for FastAPI.
+
+    Args:
+        app (FastAPI): The FastAPI application instance.
+        sqlalchemy_engine (Engine, optional): The SQLAlchemy engine instance. Defaults to None.
+        host (str, optional): The UI host listener address where data will be sent. Defaults to "0.0.0.0".
+        port (int, optional): The UI port listener address where data will be sent. Defaults to 8899.
+
+    Returns:
+        None
+
+    This function sets up the necessary configurations and middleware to integrate X-Ray
+    for FastAPI applications. It tracks and logs SQL queries along with their execution times.
+    If the `sqlalchemy_engine` is provided, it sets up event listeners for tracking SQLAlchemy queries.
+
+    Additionally, it includes exception handlers for capturing HTTP exceptions and request validation errors,
+    ensuring they can be caught and handled by the middleware.
+    """
+    global HOST
+    global OUT_PORT
+
+    HOST = host
+    OUT_PORT = port
+
     app.state.queries = []
     app.state.error = None
 
