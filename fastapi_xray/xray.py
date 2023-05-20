@@ -59,7 +59,7 @@ def start_xray(app: FastAPI, sqlalchemy_engine: "Engine" = None) -> None:  # noq
         return await inspector(request, call_next)
 
 
-async def build_debug_info(request: Request, response: Response) -> Dict:
+def build_debug_info(request: Request, response: Response) -> Dict:
     debug_info = {
         "request_id": str(uuid.uuid4()),
     }
@@ -114,27 +114,24 @@ async def get_body(request: Request) -> bytes:
 
 
 async def inspector(request: Request, call_next: Callable) -> Response:
-    elapsed_time = "N/A"
-
     body = None
     body = await extract_body(body, request)
 
+    start_time = time.perf_counter()
     try:
-        start_time = time.perf_counter()
-
         response = await call_next(request)
-        end_time = time.perf_counter()
-        elapsed_time = (end_time - start_time) * 1000
-        elapsed_time = f"{elapsed_time:.4f}"
-
     except HTTPException as htex:
         response = JSONResponse(status_code=htex.status_code, content=htex.detail)
     except RequestValidationError as re:
         response = JSONResponse(status_code=422, content=re.errors())
     except Exception as e:
         response = JSONResponse(status_code=500, content=str(e))
+    finally:
+        end_time = time.perf_counter()
+        elapsed_time = (end_time - start_time) * 1000
+        elapsed_time = f"{elapsed_time:.4f}"
 
-    debug_info = await build_debug_info(request, response)
+    debug_info = build_debug_info(request, response)
 
     debug_info["elapsed_time"] = elapsed_time
 
