@@ -16,7 +16,7 @@ HOST = "0.0.0.0"  # The server's hostname or IP address
 OUT_PORT = 8989  # The port used by the server to send data
 
 
-def start_inspector(app: FastAPI, sqlalchemy_engine: "Engine" = None) -> None:  # noqa
+def start_xray(app: FastAPI, sqlalchemy_engine: "Engine" = None) -> None:  # noqa
     app.state.queries = []
     app.state.error = None
 

@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+
+[project]
+name = "fastapi_xray"
+version = "0.1.0"
+authors = [
+    { name = "Ropali Munshi", email = "ropali68@example.com" },
+]
+description = "A FastAPI debug tool to look into request/response"
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+dynamic = ["dependencies"]
+[tool.setuptools.dynamic]
+dependencies = { file = ["requirements.txt"] }
+
+[project.urls]
+"Homepage" = "https://github.com/ropali/fastapi_xray"
+"Bug Tracker" = "https://github.com/ropali/fastapi_xray/issues"
