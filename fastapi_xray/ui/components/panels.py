@@ -1,4 +1,3 @@
-from commons.logger import get_logger
 from rich.console import RenderableType
 from schemas import APIRequest
 from textual.app import ComposeResult
@@ -19,8 +18,6 @@ from ui.components.panel_factory import (
 )
 from ui.components.widgets import WrapperWidget
 from ui.components.widgets.list import ListItems
-
-logger = get_logger(__name__)
 
 
 class LeftPanel(Widget):

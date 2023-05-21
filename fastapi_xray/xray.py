@@ -11,7 +11,7 @@ from fastapi.responses import JSONResponse
 
 from fastapi_xray.commons.logger import get_logger
 
-logger = get_logger(__name__)
+logger = get_logger()
 
 HOST = os.environ.get("XRAY_HOST", "0.0.0.0")  # The server's hostname or IP address
 OUT_PORT = int(

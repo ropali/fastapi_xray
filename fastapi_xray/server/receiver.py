@@ -3,7 +3,7 @@ from multiprocessing import Queue
 
 from commons.logger import get_logger
 
-logger = get_logger(__name__)
+logger = get_logger()
 
 
 class Receiver:
@@ -36,8 +36,10 @@ class Receiver:
                         else:
                             break
                     # Process the data received from the client
-                    logger.info(f"Received data: {data.decode('utf-8')}")
-                    self.shared_queue.put(data.decode("utf-8"))
+                    decoded_data = data.decode("utf-8")
+                    logger.info("Received data from client")
+                    self.shared_queue.put(decoded_data)
+                    logger.info("Data sent to the shared queue.")
 
             except Exception as e:
                 self.stop()

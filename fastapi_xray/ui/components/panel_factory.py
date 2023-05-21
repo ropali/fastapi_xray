@@ -1,15 +1,12 @@
 import json
 from abc import ABC, abstractmethod
 
-from commons.logger import get_logger
 from rich.align import Align
 from rich.layout import Layout
 from rich.panel import Panel
 from rich.syntax import Syntax
 from schemas import APIRequest
 from ui.components.widgets.panels import SyntaxPanel
-
-logger = get_logger(__name__)
 
 
 class PanelFactory(ABC):

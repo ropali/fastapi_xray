@@ -3,7 +3,7 @@ from textual.app import ComposeResult
 from textual.widget import AwaitMount
 from textual.widgets import Label, ListItem, ListView
 
-logger = get_logger(__name__)
+logger = get_logger()
 
 
 class LabelItem(ListItem):

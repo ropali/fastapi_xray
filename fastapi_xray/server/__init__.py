@@ -3,7 +3,7 @@ from multiprocessing import Queue
 from commons.logger import get_logger
 from server.receiver import Receiver
 
-logger = get_logger(__name__)
+logger = get_logger()
 
 
 def start_server(shared_queue: Queue, host: str, port: int):

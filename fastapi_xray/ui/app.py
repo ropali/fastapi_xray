@@ -13,7 +13,7 @@ from ui.components.panels import LeftPanel, RightPanel
 from ui.components.widgets.list import LabelItem
 from ui.components.widgets.text import TextBox
 
-logger = get_logger(__name__)
+logger = get_logger()
 
 
 class MainApp(App):
@@ -61,12 +61,15 @@ class MainApp(App):
         request = self.requests.get(event.item.value)
         self.query_one(RightPanel).selected_request = request
         logger.info(
-            f"Selected request: {self.query_one(RightPanel).selected_request} {request}"
+            f"Selected request: <{request.request_id}> {request.request.method} {request.request.path}"
         )
 
     async def add_new_request(self, new_request: APIRequest):
         widget = self.query_one("#left_panel_list_view")
         request = new_request.request
+        logger.info(
+            f"New request added: <{new_request.request_id}> {request.method} {request.path}"
+        )
         widget.prepend(
             LabelItem(
                 label=f"{len(self.requests) + 1}. [b][{request.method}][/] {request.path}",

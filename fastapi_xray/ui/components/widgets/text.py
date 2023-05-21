@@ -4,7 +4,7 @@ from rich.align import Align
 from rich.panel import Panel
 from textual.widget import Widget
 
-logger = get_logger(__name__)
+logger = get_logger()
 
 
 class TextBox(Widget):
