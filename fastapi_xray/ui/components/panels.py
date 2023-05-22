@@ -1,11 +1,12 @@
 from rich.console import RenderableType
-from schemas import APIRequest
 from textual.app import ComposeResult
 from textual.containers import Container
 from textual.reactive import Reactive
 from textual.widget import Widget
 from textual.widgets import TabbedContent, TabPane
-from ui.components.panel_factory import (
+
+from fastapi_xray.schemas import APIRequest
+from fastapi_xray.ui.components.panel_factory import (
     CookiesPanelFactory,
     HeadersPanelFactory,
     PanelFactory,
@@ -16,8 +17,8 @@ from ui.components.panel_factory import (
     ResponseHeadersPanelFactory,
     SQLPanelFactory,
 )
-from ui.components.widgets import WrapperWidget
-from ui.components.widgets.list import ListItems
+from fastapi_xray.ui.components.widgets import WrapperWidget
+from fastapi_xray.ui.components.widgets.list import ListItems
 
 
 class LeftPanel(Widget):

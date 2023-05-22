@@ -2,16 +2,17 @@ import json
 import os
 from multiprocessing import Queue
 
-from commons.logger import get_logger
-from schemas import APIRequest
 from textual import work
 from textual.app import App, ComposeResult
 from textual.containers import Container
 from textual.reactive import reactive
 from textual.widgets import Footer, ListView
-from ui.components.panels import LeftPanel, RightPanel
-from ui.components.widgets.list import LabelItem
-from ui.components.widgets.text import TextBox
+
+from fastapi_xray.commons.logger import get_logger
+from fastapi_xray.schemas import APIRequest
+from fastapi_xray.ui.components.panels import LeftPanel, RightPanel
+from fastapi_xray.ui.components.widgets.list import LabelItem
+from fastapi_xray.ui.components.widgets.text import TextBox
 
 logger = get_logger()
 

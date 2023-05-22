@@ -1,7 +1,8 @@
-from commons.logger import get_logger
 from textual.app import ComposeResult
 from textual.widget import AwaitMount
 from textual.widgets import Label, ListItem, ListView
+
+from fastapi_xray.commons.logger import get_logger
 
 logger = get_logger()
 

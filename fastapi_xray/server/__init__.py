@@ -1,7 +1,7 @@
 from multiprocessing import Queue
 
-from commons.logger import get_logger
-from server.receiver import Receiver
+from fastapi_xray.commons.logger import get_logger
+from fastapi_xray.server.receiver import Receiver
 
 logger = get_logger()
 

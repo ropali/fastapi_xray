@@ -5,8 +5,9 @@ from rich.align import Align
 from rich.layout import Layout
 from rich.panel import Panel
 from rich.syntax import Syntax
-from schemas import APIRequest
-from ui.components.widgets.panels import SyntaxPanel
+
+from fastapi_xray.schemas import APIRequest
+from fastapi_xray.ui.components.widgets.panels import SyntaxPanel
 
 
 class PanelFactory(ABC):

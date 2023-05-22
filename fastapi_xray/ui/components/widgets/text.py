@@ -1,10 +1,7 @@
-from commons.logger import get_logger
 from rich import box
 from rich.align import Align
 from rich.panel import Panel
 from textual.widget import Widget
-
-logger = get_logger()
 
 
 class TextBox(Widget):

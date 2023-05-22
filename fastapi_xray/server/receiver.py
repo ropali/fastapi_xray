@@ -1,7 +1,7 @@
 import socket
 from multiprocessing import Queue
 
-from commons.logger import get_logger
+from fastapi_xray.commons.logger import get_logger
 
 logger = get_logger()
 

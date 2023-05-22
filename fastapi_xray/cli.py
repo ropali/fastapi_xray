@@ -2,9 +2,10 @@ import multiprocessing
 from multiprocessing import Process
 
 import typer
-from commons.logger import get_logger
-from server import start_server
-from ui.app import render_ui
+
+from fastapi_xray.commons.logger import get_logger
+from fastapi_xray.server import start_server
+from fastapi_xray.ui.app import render_ui
 
 app = typer.Typer()
 
