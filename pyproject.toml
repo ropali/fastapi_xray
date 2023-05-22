@@ -9,6 +9,7 @@ version = "0.1.0"
 authors = [
     { name = "Ropali Munshi", email = "ropali68@example.com" },
 ]
+
 description = "A FastAPI debug tool to look into request/response"
 readme = "README.md"
 requires-python = ">=3.8"
@@ -22,6 +23,12 @@ dynamic = ["dependencies"]
 [tool.setuptools.dynamic]
 dependencies = { file = ["requirements.txt"] }
 
-[project.urls]
+[project.scripts]
+fastapi_xray = "fastapi_xray.cli:app"
+
+[tool.setuptools.package-data]
+fastapi_xray = ["ui/*.css"]
+
+[fastapi_xray.urls]
 "Homepage" = "https://github.com/ropali/fastapi_xray"
 "Bug Tracker" = "https://github.com/ropali/fastapi_xray/issues"
