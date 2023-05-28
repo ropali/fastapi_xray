@@ -1,0 +1,90 @@
+Screen {
+    layout: vertical;
+}
+
+Screen {
+    layout: grid;
+    grid-size: 2 1;
+    grid-columns: 1fr 3fr;
+    width: 100%
+}
+
+#app_title {
+    dock: top;
+    width: 100%;
+    height: 3;
+    background: #555358;
+    color: #FFFFFF;
+    margin: 1 1 1 0;
+}
+
+#left_panel {
+    dock: left;
+    width: 100%;
+    height: 100%;
+    background: #555358;
+    color: #FFFFFF;
+    margin: 0 0 1 0;
+    border: solid #d08770;
+}
+
+
+#right_panel {
+    dock: right;
+    width: 100%;
+    height: 100%;
+    background: #555358;
+    color: #FFFFFF;
+    margin: 0 0 1 1;
+    border: solid #d08770;
+    overflow: auto auto;
+    scrollbar-size: 1 1;
+    scrollbar-color: #d08770;
+    scrollbar-color-active: #d08770;
+    scrollbar-color-hover: #d08770;
+}
+
+#left_panel_list_view{
+    background: #555358;
+    color: #5f6062
+}
+
+
+#left_panel_header {
+    margin: 1 1;
+    width: auto;
+    text-align: center;
+}
+
+.info-box {
+    height: auto;
+}
+
+Footer {
+   background: #5f6062;
+    color: $text;
+    dock: bottom;
+    height: 1;
+}
+
+Footer > .footer--highlight {
+   background: #7b7263;
+}
+
+Footer > .footer--highlight-key {
+    background: #7b7263;
+    text-style: bold;
+}
+
+Footer > .footer--key {
+    text-style: bold;
+    background: #7b7263;
+}
+.left_panel_label {
+    padding: 1;
+    width: 100%
+}
+
+text-box {
+    height: 10
+}
