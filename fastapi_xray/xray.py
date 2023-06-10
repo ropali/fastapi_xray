@@ -185,7 +185,19 @@ async def extract_body(body: bytes, request: Request) -> bytes:
         # https://stackoverflow.com/a/74778485/6832201
         await set_body(request, await request.body())
         body = await request.json()
+    elif request.headers.get("Content-Type") == "application/x-www-form-urlencoded":
+        await set_body(request, await request.body())
+        form_data = await form_to_json(request)
+        return form_data
     return body
+
+async def form_to_json(request: Request):
+        form_data = await request.form()
+        form_items = form_data.items()
+        form_body = {}
+        for item in form_items:
+            form_body[item[0]] = item[1]
+        return form_body
 
 
 def send_debug_info(debug_info: Dict):
