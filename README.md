@@ -15,7 +15,7 @@ Key Features:
 ## Installation
 Install this package from pypi using this command.
 ```
-pip install fastapi_xray
+pip install fastapi-xray
 ```
 
 ## Usage
