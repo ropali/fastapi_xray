@@ -34,7 +34,7 @@ class ResponseError(BaseModel):
 
 class Response(BaseModel):
     headers: Dict[str, str]
-    error: Optional[ResponseError]
+    error: Optional[ResponseError] = None
 
 
 class SQlQuery(BaseModel):
