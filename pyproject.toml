@@ -1,34 +1,33 @@
-[build-system]
-requires = ["setuptools>=61.0"]
-build-backend = "setuptools.build_meta"
-
-
-[project]
+[tool.poetry]
 name = "fastapi_xray"
-version = "0.1.1"
-authors = [
-    { name = "Ropali Munshi", email = "ropali68@example.com" },
-]
-
+version = "0.1.2"
 description = "A FastAPI debug tool to look into request/response"
+authors = ["Ropali Munshi <ropali68@example.com>"]
 readme = "README.md"
-requires-python = ">=3.8"
+homepage = "https://github.com/ropali/fastapi_xray"
+repository = "https://github.com/ropali/fastapi_xray"
+documentation = "https://github.com/ropali/fastapi_xray"
+keywords = ["fastapi", "debug", "tool"]
+license = "MIT"
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",
-    "Operating System :: OS Independent",
+    "Operating System :: OS Independent"
+]
+packages = [
+    { include = "fastapi_xray" }
+]
+include = [
+    "fastapi_xray/ui/*.css"
 ]
 
-dynamic = ["dependencies"]
-[tool.setuptools.dynamic]
-dependencies = { file = ["requirements.txt"] }
+[tool.poetry.dependencies]
+python = "^3.8"
+pydantic = ">=1.0"
 
-[project.scripts]
+[tool.poetry.scripts]
 fastapi_xray = "fastapi_xray.cli:app"
 
-[tool.setuptools.package-data]
-fastapi_xray = ["ui/*.css"]
-
-[fastapi_xray.urls]
-"Homepage" = "https://github.com/ropali/fastapi_xray"
-"Bug Tracker" = "https://github.com/ropali/fastapi_xray/issues"
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
